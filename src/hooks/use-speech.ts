@@ -12,15 +12,12 @@ function normLang(raw: string): string {
 /**
  * Find the best voice for the given language.
  *
- * Indonesian (id-ID) known names across platforms:
- *   - Chrome:    "Google Bahasa Indonesia"
- *   - macOS/iOS: "Damayanti"
- *   - Windows:   "Microsoft Andika"
- *
- * English (en-US) known names (no UK accent):
- *   - Chrome:  "Google US English"
- *   - Windows: "Microsoft Zira", "Microsoft David"
- *   - macOS:   "Samantha", "Karen"
+ * Prioritises natural-sounding voices in this order:
+ *   1. Google neural voices (most human)
+ *   2. Microsoft neural voices
+ *   3. Apple system voices
+ *   4. Any voice matching the language
+ *   5. Any voice at all
  */
 function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
   if (!window.speechSynthesis) return null;
@@ -29,10 +26,8 @@ function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
 
   const langPrefix = lang === "id" ? "id" : "en";
 
-  // --- Voice-matching strategies (tried in order) ---
-
-  // 1. Match by keyword(s) in the voice name (most specific first)
-  const nameKeywords =
+  // --- Keyword patterns tried in order ---
+  const nameKeywords: string[][] =
     lang === "id"
       ? [
           ["Google", "Indonesia"],
@@ -58,43 +53,53 @@ function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
     if (voice) return voice;
   }
 
-  // 2. Fallback to first voice matching the language prefix
+  // Fallback to first voice matching the language prefix
   const langMatch = voices.find((v) => normLang(v.lang).startsWith(langPrefix));
   if (langMatch) return langMatch;
 
-  // 3. Last resort — any voice at all
+  // Last resort — any voice at all
   return voices[0] || null;
 }
 
 /**
  * Try to populate voices synchronously (needed on some browsers where
  * `getVoices()` returns an empty array on the first call).
- * Returns `true` if voices are readily available.
  */
 function populateVoices(): boolean {
   if (!window.speechSynthesis) return false;
-  // Force voice list population (Chrome loads them on first access)
   const voices = window.speechSynthesis.getVoices();
   return voices && voices.length > 0;
 }
 
 export function useSpeech() {
   const [speaking, setSpeaking] = useState(false);
-  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
   const voicesLoadedRef = useRef(false);
+  const speechIdRef = useRef(0);     // increments each call so stale timeouts are ignored
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  /** Cancel all pending timeouts and speech. */
+  const stop = useCallback(() => {
+    // Clear all pending sentence timeouts
+    for (const t of timeoutsRef.current) clearTimeout(t);
+    timeoutsRef.current = [];
+
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
 
   const speak = useCallback((text: string, lang: VoicePreference = "en") => {
     if (!window.speechSynthesis) return;
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+    // Cancel previous speech & pending timeouts
+    stop();
 
-    // Try to populate voices (synchronous attempt first)
+    // Bump speech ID so stale timeouts become no-ops
+    const thisSpeechId = ++speechIdRef.current;
+
+    // Ensure voices are loaded
     if (!voicesLoadedRef.current) {
       voicesLoadedRef.current = populateVoices();
     }
-
-    // If still empty, register the async handler on first call only
     if (!voicesLoadedRef.current) {
       const handler = () => {
         voicesLoadedRef.current = true;
@@ -103,22 +108,30 @@ export function useSpeech() {
       window.speechSynthesis.addEventListener("voiceschanged", handler);
     }
 
-    // --- Expressive per-language voice settings ---
-    // Slower rate + higher pitch = more animated, warm, and engaging
-    const rate = lang === "id" ? 0.92 : 0.95;
-    const pitch = lang === "id" ? 1.35 : 1.3;
+    // --- Human & natural speech settings ---
+    // Natural conversational pace at a neutral pitch.
+    // These values let the TTS engine apply its own prosody naturally.
+    const rate = lang === "id" ? 0.95 : 1.0;  // Indonesian slightly slower (more syllables)
+    const pitch = lang === "id" ? 1.05 : 1.0; // Indonesian very slight warmth, English neutral
+    const pauseMs = 180;                       // natural breathing pause between sentences
 
-    // Split long text into sentences so we can add micro-pauses between them.
-    // This makes the speech sound more natural and expressive than a single
-    // flat utterance.
+    // Pick the best voice once and reuse it
+    const bestVoice = findBestVoice(lang);
+
+    // Split text into sentences for natural breathing pauses.
+    // Single-sentence text is spoken as one utterance.
     const sentences = text.match(/[^.!?]*[.!?]+/g) || [text];
 
     let delay = 0;
-    for (const sentence of sentences) {
-      const trimmed = sentence.trim();
+    const newTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+    for (let i = 0; i < sentences.length; i++) {
+      const trimmed = sentences[i].trim();
       if (!trimmed) continue;
 
-      setTimeout(() => {
+      const tid = setTimeout(() => {
+        // Ignore if speech was cancelled and a new call happened
+        if (speechIdRef.current !== thisSpeechId) return;
         if (!window.speechSynthesis) return;
 
         const u = new SpeechSynthesisUtterance(trimmed);
@@ -127,32 +140,24 @@ export function useSpeech() {
         u.pitch = pitch;
         u.volume = 1.0;
 
-        const bestVoice = findBestVoice(lang);
-        if (bestVoice) {
-          u.voice = bestVoice;
-        }
+        if (bestVoice) u.voice = bestVoice;
 
-        // Only the first utterance sets speaking=true; the last sets speaking=false
-        if (delay === 0) {
-          u.onstart = () => setSpeaking(true);
-        }
-        if (delay === (sentences.length - 1) * 250) {
+        // Track speaking state: first sentence starts, last sentence ends
+        if (i === 0) u.onstart = () => setSpeaking(true);
+        if (i === sentences.length - 1) {
           u.onend = () => setSpeaking(false);
           u.onerror = () => setSpeaking(false);
         }
 
-        utterRef.current = u;
         window.speechSynthesis.speak(u);
       }, delay);
 
-      delay += 250; // micro-pause between sentences (~250ms)
+      newTimeouts.push(tid);
+      delay += pauseMs;
     }
-  }, []);
 
-  const stop = useCallback(() => {
-    window.speechSynthesis.cancel();
-    setSpeaking(false);
-  }, []);
+    timeoutsRef.current = newTimeouts;
+  }, [stop]);
 
   return { speak, stop, speaking };
 }
