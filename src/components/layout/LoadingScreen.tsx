@@ -288,41 +288,15 @@ export default function LoadingScreen() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden will-change-transform">
-      {/* ─── Night sky background ───────────────────────────────── */}
+      {/* ─── Kids learning programming cartoon background ─────── */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80')",
+          backgroundImage: "url('https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1920&q=80')",
         }}
       />
-      {/* Dark overlay for better visibility of logo and text */}
-      <div className="absolute inset-0 bg-black/30" />
-
-      {/* ─── Twinkling stars overlay ─────────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 30 }, (_, i) => (
-          <motion.div
-            key={`star-${i}`}
-            className="absolute rounded-full bg-white"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${2 + Math.random() * 3}px`,
-              height: `${2 + Math.random() * 3}px`,
-            }}
-            animate={{
-              opacity: [0.2, 0.9, 0.2],
-              scale: [0.5, 1.3, 0.5],
-            }}
-            transition={{
-              duration: 1.5 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
+      {/* Soft dark overlay so Byte robot and text stay visible */}
+      <div className="absolute inset-0 bg-black/20" />
 
       {/* ─── Floating emoji particles (smoother paths) ─────────────── */}
       <div className="absolute inset-0 pointer-events-none">
