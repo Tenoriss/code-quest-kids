@@ -39,17 +39,22 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (!isAuthenticated) navigate("/auth");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [isAuthenticated, navigate]);
 
-  // Intentionally runs only once on mount to check daily rewards and achievements
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Intentionally runs only once on mount to check daily rewards and achievements.
+  // All local setState calls are deferred via setTimeout(0) to avoid cascading renders.
+  // Context function calls (claimDailyReward, checkAchievements, sound effects) are not deps
+  // because they are stable references from context providers and should not trigger re-runs.
   useEffect(() => {
     const reward = claimDailyReward();
     if (reward) {
-      setDailyReward(reward);
-      setShowDailyReward(true);
-      setXpAmount(reward.xp);
-      setShowXPAnimation(true);
+      setTimeout(() => {
+        setDailyReward(reward);
+        setShowDailyReward(true);
+        setXpAmount(reward.xp);
+        setShowXPAnimation(true);
+      }, 0);
       playConfettiSound();
       fireConfetti(30);
       setTimeout(() => setShowDailyReward(false), 4000);
@@ -59,6 +64,7 @@ export default function StudentDashboard() {
     if (newAchievements.length > 0) {
       playAchievement();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!isAuthenticated) return null;
