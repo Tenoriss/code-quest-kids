@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router";
-import { ArrowRight, ListOrdered, GitBranch, AlertTriangle, Code, Heart } from "lucide-react";
+import { ArrowRight, ListOrdered, AlertTriangle, Code, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navbar } from "@/components/layout/Navbar";

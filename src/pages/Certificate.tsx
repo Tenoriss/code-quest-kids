@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router";
-import { Download, ArrowLeft, Sparkles, Award } from "lucide-react";
+import { Download, ArrowLeft, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGame } from "@/contexts/GameContext";

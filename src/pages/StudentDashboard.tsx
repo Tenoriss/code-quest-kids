@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router";
-import { Sparkles, Heart, Trophy, Star, Flame, BookOpen, Target, Zap, ArrowRight, Award, RotateCcw, Clock, Medal, Gift, Calendar, TrendingUp, CheckCircle2, BarChart3 } from "lucide-react";
+import { Sparkles, Heart, Trophy, Star, Flame, BookOpen, Award, RotateCcw, Clock, Medal, TrendingUp, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +41,9 @@ export default function StudentDashboard() {
     if (!isAuthenticated) navigate("/auth");
   }, [isAuthenticated, navigate]);
 
+  // Intentionally runs only once on mount to check daily rewards and achievements
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Try to claim daily reward on dashboard visit
     const reward = claimDailyReward();
     if (reward) {
       setDailyReward(reward);
@@ -54,7 +55,6 @@ export default function StudentDashboard() {
       setTimeout(() => setShowDailyReward(false), 4000);
     }
 
-    // Check achievements
     const newAchievements = checkAchievements();
     if (newAchievements.length > 0) {
       playAchievement();

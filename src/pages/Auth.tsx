@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router";
-import { Sparkles, Mail, Lock, User, Calendar, MapPin, GraduationCap, Eye, EyeOff, ArrowRight, Github, Code, Smartphone, Star, Rocket } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Calendar, MapPin, GraduationCap, Eye, EyeOff, ArrowRight, Code, Smartphone, Star, Rocket } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";

@@ -1,4 +1,4 @@
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router";
 import { ArrowRight, Target, ListOrdered, GitBranch, Search, Brain } from "lucide-react";

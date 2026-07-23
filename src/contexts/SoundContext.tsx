@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 interface SoundContextType {
