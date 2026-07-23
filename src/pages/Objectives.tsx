@@ -49,7 +49,6 @@ export default function Objectives() {
       <AIAssistant
         type="welcome"
         message={lang === "en" ? "Let's see what you'll learn today! These are our learning goals." : "Ayo lihat apa yang akan kamu pelajari hari ini! Ini adalah tujuan belajar kita."}
-        autoSpeak
       />
 
       <main className="pt-32 pb-20 px-4">

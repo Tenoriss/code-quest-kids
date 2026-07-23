@@ -63,7 +63,6 @@ export default function SequenceLesson() {
       <AIAssistant
         type="welcome"
         message={lang === "en" ? "A sequence is like steps in a game! Let's learn about it with a fun morning routine!" : "Urutan itu seperti langkah-langkah dalam game! Ayo belajar tentangnya dengan rutinitas pagi yang seru!"}
-        autoSpeak
       />
 
       <main className="pt-32 pb-20 px-4">

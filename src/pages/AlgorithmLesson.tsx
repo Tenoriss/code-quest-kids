@@ -62,7 +62,6 @@ export default function AlgorithmLesson() {
       <AIAssistant
         type="welcome"
         message={lang === "en" ? "An algorithm is like a recipe! Let's learn how to make instant noodles step by step!" : "Algoritma itu seperti resep! Ayo belajar membuat mie instan langkah demi langkah!"}
-        autoSpeak
       />
 
       <main className="pt-32 pb-20 px-4">
