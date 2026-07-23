@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, Palette, Sparkles, Heart, User, LogOut, ChevronDown, Volume2, VolumeX, Music, Music2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -8,6 +8,17 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const STUDENT_NAV = [
   { path: "/", label: { en: "Home", id: "Beranda" }, icon: Home },
@@ -26,7 +37,9 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, setTheme, availableThemes } = useTheme();
   const { lang, setLang, t } = useLanguage();
   const { state } = useGame();
@@ -36,12 +49,19 @@ export function Navbar() {
   const { isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover } = useSound();
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     setShowUserMenu(false);
+    setShowLogoutConfirm(false);
+    navigate("/");
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 kids:bg-amber-50/90 border-b border-gray-200/50 dark:border-gray-700/50">
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 kids:bg-amber-50/90 border-b border-gray-200/50 dark:border-gray-700/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -383,5 +403,33 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </nav>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl">
+              {lang === "en" ? "Sign Out?" : "Keluar?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {lang === "en"
+                ? "Are you sure you want to sign out?"
+                : "Apakah kamu yakin ingin keluar?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl text-sm">
+              {lang === "en" ? "No, Stay" : "Tidak, Tetap"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmLogout}
+              className="rounded-xl text-sm bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white border-0"
+            >
+              {lang === "en" ? "Yes, Sign Out" : "Ya, Keluar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
