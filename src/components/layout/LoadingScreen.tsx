@@ -288,11 +288,11 @@ export default function LoadingScreen() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden will-change-transform">
-      {/* ─── Cartoon kid at computer background ── */}
+      {/* ─── Cartoon kid programming at computer background ── */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('https://i.pinimg.com/1200x/08/99/63/089963ec1527e3434234e5285ef2110e.jpg')",
+          backgroundImage: "url('https://cdn.pixabay.com/photo/2022/01/14/10/34/child-6937201_1280.png')",
         }}
       />
       {/* Soft dark overlay so Byte robot and text stay visible */}
