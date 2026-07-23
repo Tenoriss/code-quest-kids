@@ -167,7 +167,6 @@ export default function AuthPage() {
             >
               <Byte
                 mood={byteMood}
-                autoSpeak
               />
               <motion.div
                 animate={{ y: [0, -5, 0] }}

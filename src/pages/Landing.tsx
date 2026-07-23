@@ -443,7 +443,6 @@ function StudentHome() {
                     ? `Hi ${studentName}! ${greeting.en}! Ready for today's adventure? 🚀`
                     : `Hai ${studentName}! ${greeting.id}! Siap untuk petualangan hari ini? 🚀`
                 }
-                autoSpeak
               />
             </div>
             <div className="flex items-center gap-3">

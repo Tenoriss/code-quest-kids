@@ -99,7 +99,7 @@ export default function TeacherDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50/20 to-teal-50/20 dark:from-gray-950 dark:via-emerald-950/5 dark:to-teal-950/5">
       <Navbar />
-      <Byte mood="wave" message={lang==="en"?"Welcome, Teacher! Here's your class overview.":"Selamat datang, Guru!"} autoSpeak />
+      <Byte mood="wave" message={lang==="en"?"Welcome, Teacher! Here's your class overview.":"Selamat datang, Guru!"}  />
       <main className="pt-32 pb-20 px-4">
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} className="mb-6">

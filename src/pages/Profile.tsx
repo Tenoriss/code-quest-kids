@@ -124,7 +124,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-pink-50/20 to-purple-50/20 dark:from-gray-950 dark:via-pink-950/5 dark:to-purple-950/5">
       <Navbar />
-      <Byte mood="wave" autoSpeak message="Hey there! Let's make your profile awesome!" />
+      <Byte mood="wave"  message="Hey there! Let's make your profile awesome!" />
 
       <main className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto">

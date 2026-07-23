@@ -101,7 +101,6 @@ export default function StudentDashboard() {
               ? `You've completed ${state.completedLessons.length} lessons! Keep going!`
               : `Kamu telah menyelesaikan ${state.completedLessons.length} pelajaran! Teruskan!`
         }
-        autoSpeak
       />
 
       {/* Daily Reward Popup */}
