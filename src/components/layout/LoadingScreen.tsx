@@ -1,32 +1,27 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoSvg from "@/assets/logo.svg";
 
+// ─── Silly Loading Messages ───────────────────────────────────────
 const LOADING_MESSAGES: { en: string; id: string; emoji: string }[] = [
-  { en: "Tickle-tickling Byte the robot... 🤗", id: "Menggelitik Byte si robot... 🤗", emoji: "🤗" },
-  { en: "Doing the funky chicken dance... 🐔", id: "Menari ayam keren... 🐔", emoji: "🐔" },
+  { en: "Tickling Byte the robot... 🤗", id: "Menggelitik Byte si robot... 🤗", emoji: "🤗" },
+  { en: "Doing the funky chicken dance! 🐔", id: "Menari ayam keren! 🐔", emoji: "🐔" },
   { en: "Putting on silly goggles... 🤓", id: "Pakai kacamata lucu... 🤓", emoji: "🤓" },
-  { en: "Eating virtual candy... 🍭", id: "Makan permen virtual... 🍭", emoji: "🍭" },
-  { en: "Making funny robot noises... 🤖", id: "Bikin suara robot lucu... 🤖", emoji: "🔊" },
-  { en: "Byte is telling a joke... 😂", id: "Byte lagi cerita lucu... 😂", emoji: "😂" },
-  { en: "Doing a silly dance... 💃", id: "Nari-nari lucu... 💃", emoji: "💃" },
-  { en: "Byte farted! Pfffffft... 💨", id: "Byte kentut! Pfffffft... 💨", emoji: "💨" },
-  { en: "Making a funny face... 🙃", id: "Bikin muka lucu... 🙃", emoji: "🙃" },
-  { en: "Almost ready! Get your giggles ready! 😜", id: "Hampir siap! Siap-siap ketawa! 😜", emoji: "😜" },
+  { en: "Eating virtual candy! 🍭", id: "Makan permen virtual! 🍭", emoji: "🍭" },
+  { en: "Making funny robot noises! 🤖", id: "Bikin suara robot lucu! 🤖", emoji: "🔊" },
+  { en: "Byte is telling a joke! 😂", id: "Byte cerita lucu! 😂", emoji: "😂" },
+  { en: "Byte is breakdancing! 💃", id: "Byte breakdance! 💃", emoji: "💃" },
+  { en: "Byte farted! Pfffft! 💨", id: "Byte kentut! Pfffft! 💨", emoji: "💨" },
+  { en: "Making a super silly face! 🙃", id: "Bikin muka super lucu! 🙃", emoji: "🙃" },
+  { en: "Almost ready! Giggles loading! 😜", id: "Hampir siap! Tawa siap! 😜", emoji: "😜" },
 ];
 
-const FUNNY_EMOJIS = ["🦄", "🌈", "🍭", "🧁", "🎈", "🐱", "🦊", "🐼", "🍕", "🧸", "🎪", "🤡", "🐸", "🦋", "🌻", "🍩", "🎠", "🪄", "🫧", "🍬"];
-const PARTICLE_COUNT = 16;
+const FLOATING_EMOJIS = ["🦄", "🌈", "🍭", "🧁", "🎈", "🐱", "🐼", "🍕", "🧸", "🤡", "🐸", "🌻", "🍩", "🎠", "🪄", "🫧", "🍬", "🎉", "🎊"];
+const PARTICLE_COUNT = 14;
+const SILLY_FACES = ["😜", "🤪", "😝", "😋", "🤭", "🥴", "😵‍💫", "🤩", "😎", "👻", "🤖", "🐸"];
+const BLUSH_COLORS = ["#ff6b9d", "#ff8fab", "#ffb3c6", "#ff4d6d", "#ff85a1"];
 
-const rainbowColors = [
-  "from-red-400 via-orange-400 to-yellow-400",
-  "from-yellow-400 via-green-400 to-teal-400",
-  "from-teal-400 via-blue-400 to-indigo-400",
-  "from-indigo-400 via-purple-400 to-pink-400",
-  "from-pink-400 via-red-400 to-orange-400",
-];
-
-interface FunnyEmoji {
+interface EmojiParticle {
   id: number;
   emoji: string;
   x: number;
@@ -37,26 +32,153 @@ interface FunnyEmoji {
   wobble: boolean;
 }
 
+// ─── Cute floating hearts / sparkles that orbit the logo ──────────
+function OrbitingSparkles() {
+  const sparkles = [
+    { emoji: "⭐", angle: 0, spread: 65, size: "text-lg" },
+    { emoji: "✨", angle: 60, spread: 75, size: "text-base" },
+    { emoji: "💫", angle: 120, spread: 70, size: "text-lg" },
+    { emoji: "🌟", angle: 180, spread: 80, size: "text-base" },
+    { emoji: "✨", angle: 240, spread: 65, size: "text-lg" },
+    { emoji: "💖", angle: 300, spread: 75, size: "text-base" },
+  ];
+
+  return (
+    <>
+      {sparkles.map((s, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none select-none"
+          initial={false}
+          animate={{
+            left: [`${50 + Math.cos((s.angle * Math.PI) / 180) * s.spread}%`],
+            top: [`${50 + Math.sin((s.angle * Math.PI) / 180) * s.spread}%`],
+            scale: [0.3, 1.4, 0.3],
+            opacity: [0, 1, 0],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 2.2,
+            repeat: Infinity,
+            delay: i * 0.35,
+            ease: "easeInOut",
+          }}
+          style={{ transform: "translate(-50%, -50%)" }}
+        >
+          <span className={s.size}>{s.emoji}</span>
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
+// ─── Cute animated eyes that blink and bounce ─────────────────────
+function CuteEyes({ isWinking }: { isWinking: boolean }) {
+  return (
+    <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-5 z-10 pointer-events-none">
+      {/* Left eye */}
+      <motion.div
+        className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-inner"
+        animate={
+          isWinking
+            ? { scaleY: [1, 0.1, 1], scaleX: [1, 0.3, 1] }
+            : { scaleY: [1, 1, 1, 1, 1, 0.1, 1, 1, 1, 1] }
+        }
+        transition={
+          isWinking
+            ? { duration: 0.3, ease: "easeInOut" }
+            : { duration: 4, repeat: Infinity, times: [0, 0.45, 0.5, 0.95, 1] } // Blinks naturally
+        }
+      >
+        <motion.div
+          className="w-2.5 h-2.5 rounded-full bg-gray-900"
+          animate={{ y: [0, -1, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
+
+      {/* Right eye */}
+      <motion.div
+        className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-inner"
+        animate={
+          isWinking
+            ? { scaleY: [1, 0.1, 1], scaleX: [1, 0.3, 1], rotate: [0, 0, -5, 0] }
+            : { scaleY: [1, 1, 1, 1, 1, 0.1, 1, 1, 1, 1] }
+        }
+        transition={
+          isWinking
+            ? { duration: 0.4, ease: "easeInOut" }
+            : { duration: 4, repeat: Infinity, times: [0, 0.45, 0.5, 0.95, 1] }
+        }
+      >
+        <motion.div
+          className="w-2.5 h-2.5 rounded-full bg-gray-900"
+          animate={{ y: [0, -1, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.1 }}
+        />
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Cute pink blush cheeks that appear periodically ──────────────
+function BlushCheeks({ show }: { show: boolean }) {
+  const color = BLUSH_COLORS[Math.floor(Math.random() * BLUSH_COLORS.length)];
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <>
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.5 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="absolute top-[58%] left-[32%] w-6 h-4 rounded-full z-10 pointer-events-none"
+            style={{ backgroundColor: color }}
+          />
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.5 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
+            className="absolute top-[58%] right-[32%] w-6 h-4 rounded-full z-10 pointer-events-none"
+            style={{ backgroundColor: color }}
+          />
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── Main Loading Screen ──────────────────────────────────────────
 export default function LoadingScreen() {
   const [messageIndex, setMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showSillyFace, setShowSillyFace] = useState(false);
   const [sillyFaceIndex, setSillyFaceIndex] = useState(0);
-  const [squishAmount, setSquishAmount] = useState(1);
+  const [isWinking, setIsWinking] = useState(false);
+  const [showBlush, setShowBlush] = useState(false);
+  const [logoScale, setLogoScale] = useState(1);
+  const [logoY, setLogoY] = useState(0);
   const langRef = useRef<"en" | "id">("en");
+  const faceRef = useRef(0);
+  const blushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const sillyFaces = ["😜", "🤪", "😝", "😋", "🤭", "😏", "🥴", "😵‍💫", "🤩", "😎"];
+  // Stable sillyFaces outside render
+  const sillyFaces = SILLY_FACES;
 
-  const funnyEmojisRef = useRef<FunnyEmoji[]>(
+  // Particles (stable)
+  const particlesRef = useRef<EmojiParticle[]>(
     Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
       id: i,
-      emoji: FUNNY_EMOJIS[Math.floor(Math.random() * FUNNY_EMOJIS.length)],
+      emoji: FLOATING_EMOJIS[Math.floor(Math.random() * FLOATING_EMOJIS.length)],
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 16 + Math.random() * 24,
+      size: 16 + Math.random() * 22,
       delay: Math.random() * 3,
-      duration: 4 + Math.random() * 4,
-      wobble: Math.random() > 0.4,
+      duration: 5 + Math.random() * 4,
+      wobble: Math.random() > 0.35,
     }))
   );
 
@@ -66,226 +188,279 @@ export default function LoadingScreen() {
     if (stored === "id" || stored === "en") langRef.current = stored;
   }, []);
 
-  // Cycle messages
+  // ─── Smooth message cycling ─────────────────────────────────────
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 1600);
+    }, 1800);
     return () => clearInterval(interval);
   }, []);
 
-  // Progress bar
+  // ─── Smooth progress bar (spring-like increments) ───────────────
   useEffect(() => {
-    const interval = setInterval(() => {
+    const tick = () => {
       setProgress((prev) => {
-        if (prev >= 92) return 92;
-        const step = 1 + Math.random() * 8;
-        return Math.min(prev + step, 92);
+        if (prev >= 90) return 90;
+        // Smoothly decelerating increments
+        const remaining = 90 - prev;
+        const step = Math.max(1, remaining * (0.08 + Math.random() * 0.12));
+        return Math.min(prev + step, 90);
       });
-    }, 350);
+    };
+    const interval = setInterval(tick, 380);
     return () => clearInterval(interval);
   }, []);
 
-  // Random silly face popup
+  // ─── Smooth silly face popup with spring ────────────────────────
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSillyFaceIndex(Math.floor(Math.random() * sillyFaces.length));
+    const showFace = () => {
+      faceRef.current = Math.floor(Math.random() * sillyFaces.length);
+      setSillyFaceIndex(faceRef.current);
       setShowSillyFace(true);
-      setTimeout(() => setShowSillyFace(false), 1200);
-    }, 2500);
+      setTimeout(() => setShowSillyFace(false), 1400);
+    };
+    const interval = setInterval(showFace, 2800);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Squish animation (randomly squish the logo)
+  // ─── Smooth wink animation ──────────────────────────────────────
   useEffect(() => {
-    const doSquish = () => {
-      setSquishAmount(0.7);
-      setTimeout(() => setSquishAmount(1.15), 150);
-      setTimeout(() => setSquishAmount(0.9), 300);
-      setTimeout(() => setSquishAmount(1), 450);
+    const wink = () => {
+      setIsWinking(true);
+      setTimeout(() => setIsWinking(false), 500);
     };
-    const interval = setInterval(doSquish, 3000);
-    return () => clearInterval(interval);
+    // Wink sometimes, not always
+    const scheduleWink = () => {
+      const delay = 4000 + Math.random() * 5000;
+      return setTimeout(() => {
+        wink();
+        scheduleWink();
+      }, delay);
+    };
+    const timer = scheduleWink();
+    return () => clearTimeout(timer);
   }, []);
 
-  const currentMessage = LOADING_MESSAGES[messageIndex];
+  // ─── Blush cheeks that appear and fade smoothly ─────────────────
+  useEffect(() => {
+    const showBlushCheeks = () => {
+      setShowBlush(true);
+      if (blushTimerRef.current) clearTimeout(blushTimerRef.current);
+      blushTimerRef.current = setTimeout(() => setShowBlush(false), 2000);
+    };
+    const interval = setInterval(showBlushCheeks, 5000);
+    return () => {
+      clearInterval(interval);
+      if (blushTimerRef.current) clearTimeout(blushTimerRef.current);
+    };
+  }, []);
+
+  // ─── Smooth jelly/squish animation ──────────────────────────────
+  const doJelly = useCallback(() => {
+    setLogoScale(0.85);
+    setLogoY(-5);
+    requestAnimationFrame(() => {
+      setLogoScale(1.15);
+      setLogoY(2);
+      requestAnimationFrame(() => {
+        setLogoScale(0.95);
+        setLogoY(-1);
+        requestAnimationFrame(() => {
+          setLogoScale(1.02);
+          setLogoY(0);
+          requestAnimationFrame(() => {
+            setLogoScale(1);
+          });
+        });
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(doJelly, 3500);
+    return () => clearInterval(interval);
+  }, [doJelly]);
+
   const lang = langRef.current;
-  const topEmojis = funnyEmojisRef.current;
+  const particles = particlesRef.current;
+  const currentMessage = LOADING_MESSAGES[messageIndex];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500">
-      {/* Animated rainbow orbs */}
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 will-change-transform">
+      {/* ─── Smooth animated background orbs ─────────────────────── */}
       <motion.div
-        className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-red-400/8 blur-3xl"
-        animate={{ scale: [1, 1.5, 1], x: [0, 40, 0], y: [0, -40, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/5 left-1/4 w-[30rem] h-[30rem] rounded-full bg-pink-400/10 blur-3xl will-change-transform"
+        animate={{ scale: [1, 1.5, 1], x: [0, 50, 0], y: [0, -50, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-yellow-300/8 blur-3xl"
-        animate={{ scale: [1, 1.6, 1], x: [0, -50, 0], y: [0, 50, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-1/4 right-1/5 w-[35rem] h-[35rem] rounded-full bg-yellow-300/8 blur-3xl will-change-transform"
+        animate={{ scale: [1, 1.6, 1], x: [0, -60, 0], y: [0, 60, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
       />
 
-      {/* Floating silly emojis everywhere */}
-      {topEmojis.map((fe) => (
-        <motion.div
-          key={fe.id}
-          className="absolute pointer-events-none select-none"
-          style={{ left: `${fe.x}%`, top: `${fe.y}%`, fontSize: `${fe.size}px` }}
-          animate={
-            fe.wobble
-              ? {
-                  y: [0, -50 - fe.id * 3, 0],
-                  x: [0, fe.id % 2 === 0 ? 25 : -25, 0],
-                  rotate: [0, fe.id % 2 === 0 ? 15 : -15, -15, 15, 0],
-                  scale: [0.3, 1.2, 0.3],
-                }
-              : {
-                  y: [0, -80, 0],
-                  x: [0, fe.id % 2 === 0 ? 40 : -40, 0],
-                  rotate: [0, 360],
-                  scale: [0.2, 1.1, 0.2],
-                }
-          }
-          transition={{
-            duration: fe.duration,
-            repeat: Infinity,
-            delay: fe.delay,
-            ease: "easeInOut",
-          }}
-        >
-          {fe.emoji}
-        </motion.div>
-      ))}
+      {/* ─── Floating emoji particles (smoother paths) ─────────────── */}
+      <div className="absolute inset-0 pointer-events-none">
+        {particles.map((fe) => (
+          <motion.div
+            key={fe.id}
+            className="absolute select-none will-change-transform"
+            style={{ left: `${fe.x}%`, top: `${fe.y}%`, fontSize: `${fe.size}px` }}
+            animate={
+              fe.wobble
+                ? {
+                    y: [0, -60 - (fe.id % 4) * 5, 0],
+                    x: [0, fe.id % 2 === 0 ? 30 : -30, 0],
+                    rotate: [0, (fe.id % 2 === 0 ? 1 : -1) * 20, (fe.id % 2 === 0 ? -1 : 1) * 15, 0],
+                    scale: [0.4, 1.3, 0.4],
+                  }
+                : {
+                    y: [0, -100, 0],
+                    x: [0, (fe.id % 2 === 0 ? 1 : -1) * 50, 0],
+                    rotate: [0, 360],
+                    scale: [0.3, 1.2, 0.3],
+                  }
+            }
+            transition={{
+              duration: fe.duration,
+              repeat: Infinity,
+              delay: fe.delay,
+              ease: "easeInOut",
+            }}
+          >
+            {fe.emoji}
+          </motion.div>
+        ))}
+      </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        {/* Byte Robot Logo with funny animations */}
+      {/* ─── Main Content ─────────────────────────────────────────── */}
+      <div className="relative z-10 flex flex-col items-center gap-7 will-change-transform">
+        {/* ─── Byte Robot Logo ──────────────────────────────────── */}
         <motion.div
           initial={{ scale: 0, rotate: -360 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 180, damping: 10, duration: 1 }}
+          transition={{ type: "spring", stiffness: 160, damping: 12, duration: 0.9 }}
           className="relative"
         >
-          {/* Rainbow ring behind logo */}
+          {/* Rainbow ring behind logo - outer */}
           <motion.div
-            className="absolute inset-0 -m-6 rounded-full opacity-40 blur-md"
+            className="absolute inset-0 -m-7 rounded-full opacity-35 blur-[2px] will-change-transform"
             style={{
-              background: "conic-gradient(#ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6, #ff6b6b)",
+              background: "conic-gradient(from 0deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6, #ff6b6b)",
             }}
             animate={{ rotate: [0, 360] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
           />
-          {/* Second rainbow ring */}
+          {/* Rainbow ring - inner (counter-rotating for smoother effect) */}
           <motion.div
-            className="absolute inset-0 -m-8 rounded-full opacity-20 blur-lg"
+            className="absolute inset-0 -m-10 rounded-full opacity-15 blur-md will-change-transform"
             style={{
-              background: "conic-gradient(#ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6, #ff6b6b)",
+              background: "conic-gradient(from 0deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6, #ff6b6b)",
             }}
             animate={{ rotate: [360, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
           />
 
-          {/* Glow */}
+          {/* White glow */}
           <motion.div
-            className="absolute inset-0 -m-4 rounded-full bg-white/15 blur-xl"
-            animate={{
-              scale: [1, 1.25, 1],
-              opacity: [0.4, 0.9, 0.4],
-            }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 -m-5 rounded-full bg-white/12 blur-2xl will-change-transform"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
 
-          {/* Logo with squish + bounce combo */}
+          {/* Super smooth bounce + jelly combo */}
           <motion.div
             animate={{
-              y: [0, -14, 0, -7, 0],
-              scaleX: [1, squishAmount, 1],
-              scaleY: [1, 2 - squishAmount, 1],
+              y: [0, -15, 0, -8, 0],
             }}
             transition={{
-              y: { duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
-              scaleX: { duration: 0.45, ease: "easeInOut" },
-              scaleY: { duration: 0.45, ease: "easeInOut" },
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              times: [0, 0.3, 0.6, 0.8, 1],
+            }}
+            style={{
+              scale: logoScale,
+              marginTop: logoY,
+              transition: "scale 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), margin-top 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
             }}
           >
-            <img
-              src={logoSvg}
-              alt="CodeQuest"
-              className="w-28 h-28 sm:w-36 sm:h-36 drop-shadow-2xl"
-            />
+            {/* Logo image */}
+            <div className="relative">
+              <img
+                src={logoSvg}
+                alt="CodeQuest"
+                className="w-28 h-28 sm:w-36 sm:h-36 drop-shadow-2xl"
+              />
+
+              {/* ─── Cute animated eyes overlay ──────────────── */}
+              <CuteEyes isWinking={isWinking} />
+
+              {/* ─── Blush cheeks ────────────────────────────── */}
+              <BlushCheeks show={showBlush} />
+            </div>
           </motion.div>
 
-          {/* Silly face popup */}
-          <AnimatePresence>
+          {/* ─── Silly face popup (super smooth spring entry) ──── */}
+          <AnimatePresence mode="popLayout">
             {showSillyFace && (
               <motion.div
                 key={sillyFaceIndex}
-                initial={{ opacity: 0, scale: 0, y: 20, x: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0, x: 50 }}
-                exit={{ opacity: 0, scale: 0, y: -20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 12 }}
-                className="absolute -top-4 -right-4 text-3xl sm:text-4xl z-20 drop-shadow-lg"
-                style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))" }}
+                initial={{ opacity: 0, scale: 0, x: 30, y: -30 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  x: 55,
+                  y: -35,
+                  rotate: [0, -8, 8, -5, 0],
+                }}
+                exit={{ opacity: 0, scale: 0, x: 40, y: -40 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 280,
+                  damping: 14,
+                  mass: 0.6,
+                }}
+                className="absolute text-3xl sm:text-4xl z-20 select-none"
+                style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.3))" }}
               >
                 <motion.span
-                  animate={{ rotate: [0, -15, 15, -15, 0] }}
-                  transition={{ duration: 0.6, repeat: Infinity }}
+                  animate={{ rotate: [0, -12, 12, -12, 0] }}
+                  transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {sillyFaces[sillyFaceIndex]}
                 </motion.span>
-                {/* Speech bubble tail */}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-white/20 rotate-45 rounded-sm" />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Star burst around the logo */}
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <motion.div
-              key={`star-${i}`}
-              className="absolute pointer-events-none text-xl"
-              style={{
-                left: `${50 + Math.cos((i * 60 * Math.PI) / 180) * 70}%`,
-                top: `${50 + Math.sin((i * 60 * Math.PI) / 180) * 70}%`,
-                transform: "translate(-50%, -50%)",
-              }}
-              animate={{
-                scale: [0, 1.3, 0],
-                opacity: [0, 1, 0],
-                rotate: [0, 180],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: "easeInOut",
-              }}
-            >
-              {["⭐", "✨", "💫", "🌟", "✨", "⭐"][i]}
-            </motion.div>
-          ))}
+          {/* ─── Orbiting sparkles ──────────────────────────────── */}
+          <OrbitingSparkles />
         </motion.div>
 
-        {/* Animated Message - extra bouncy */}
+        {/* ─── Animated Message (smoother spring transitions) ─────── */}
         <div className="h-16 flex items-center justify-center">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             <motion.div
               key={messageIndex}
-              initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
-              animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, y: -30, scale: 0.5, rotate: 10 }}
+              initial={{ opacity: 0, y: 25, scale: 0.6 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -25, scale: 0.6 }}
               transition={{
                 type: "spring",
-                stiffness: 250,
-                damping: 15,
+                stiffness: 300,
+                damping: 18,
+                mass: 0.8,
               }}
-              className="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/15"
+              className="flex items-center gap-3 bg-white/12 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/15 shadow-lg will-change-transform"
             >
               <motion.span
-                animate={{ rotate: [0, 15, -15, 15, 0], scale: [1, 1.3, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
+                animate={{
+                  rotate: [0, 12, -12, 12, 0],
+                  scale: [1, 1.25, 1],
+                }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
                 className="text-3xl"
               >
                 {currentMessage.emoji}
@@ -297,33 +472,38 @@ export default function LoadingScreen() {
           </AnimatePresence>
         </div>
 
-        {/* Progress Bar - rainbow colored */}
+        {/* ─── Progress Bar (smoother spring animation) ───────────── */}
         <div className="w-64 sm:w-80">
-          <div className="h-4 rounded-full bg-white/15 overflow-hidden backdrop-blur-sm border-2 border-white/20 shadow-inner">
+          <div className="h-4 rounded-full bg-white/12 overflow-hidden backdrop-blur-sm border-2 border-white/15 shadow-inner will-change-transform">
             <motion.div
-              className="h-full rounded-full"
+              className="h-full rounded-full will-change-transform"
               style={{
                 width: `${progress}%`,
-                background: `linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6)`,
+                background: "linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #9b59b6)",
               }}
-              layout
-              transition={{ type: "spring", stiffness: 80, damping: 15 }}
+              layout="position"
+              transition={{ type: "spring", stiffness: 120, damping: 20, mass: 0.5 }}
             />
           </div>
-          <div className="flex items-center justify-center gap-2 mt-2">
+          {/* Loading text with spinning decorations */}
+          <div className="flex items-center justify-center gap-2 mt-3">
             <motion.span
               animate={{ rotate: [0, 360] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
               className="text-sm"
             >
               🌀
             </motion.span>
-            <span className="text-white/60 text-xs font-medium">
+            <motion.span
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="text-white/60 text-xs font-medium"
+            >
               {lang === "en" ? "Loading giggles..." : "Memuat tawa..."}
-            </span>
+            </motion.span>
             <motion.span
               animate={{ rotate: [360, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
               className="text-sm"
             >
               🌀
@@ -332,21 +512,21 @@ export default function LoadingScreen() {
         </div>
       </div>
 
-      {/* Bottom dancing dots */}
-
-      <div className="absolute bottom-6 flex items-center gap-3">
+      {/* ─── Bottom dancing robots (smoother wave) ────────────────── */}
+      <div className="absolute bottom-6 flex items-center gap-3 will-change-transform">
         {["🤖", "💃", "🕺", "🤖", "💃"].map((emoji, i) => (
           <motion.span
             key={i}
-            className="text-xl"
+            className="text-xl select-none"
             animate={{
-              y: [0, -12 - i * 3, 0],
-              rotate: [0, i % 2 === 0 ? 10 : -10, 0],
+              y: [0, -14 - (i % 3) * 5, 0],
+              rotate: [0, i % 2 === 0 ? 12 : -12, 0],
+              scale: [1, 1.1, 1],
             }}
             transition={{
-              duration: 0.8 + i * 0.15,
+              duration: 0.9 + i * 0.12,
               repeat: Infinity,
-              delay: i * 0.15,
+              delay: i * 0.18,
               ease: "easeInOut",
             }}
           >
