@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Volume2, VolumeX, RotateCcw, Sparkles } from "lucide-react";
 
 interface ByteProps {
@@ -70,7 +70,6 @@ export function Byte({
   autoSpeak = false,
   hint,
   className = "",
-  position = "inline",
 }: ByteProps) {
   const moodType = mood;
   const [currentMood, setCurrentMood] = useState<"idle" | "wave" | "happy" | "celebrate" | "think" | "sad" | "excited">(moodType);
@@ -110,6 +109,7 @@ export function Byte({
   }, [mood, message, getRandomMessage]);
 
   // Auto mood cycling when idle
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (mood === "idle") {
       const moods = ["idle", "wave", "idle", "happy", "idle", "think", "idle", "wave"] as const;
@@ -124,14 +124,6 @@ export function Byte({
       if (moodIntervalRef.current) clearInterval(moodIntervalRef.current);
     };
   }, [mood]);
-
-  // Auto speak
-  useEffect(() => {
-    if (autoSpeak && currentMessage && !isMuted) {
-      const timer = setTimeout(() => speak(currentMessage), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [autoSpeak, currentMessage, isMuted]);
 
   // Speech synthesis with male child voice
   const speak = useCallback(
@@ -169,6 +161,14 @@ export function Byte({
     },
     [isMuted, speed, volume]
   );
+
+  // Auto speak (speak is defined above, so it's available here)
+  useEffect(() => {
+    if (autoSpeak && currentMessage && !isMuted) {
+      const timer = setTimeout(() => speak(currentMessage), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSpeak, currentMessage, isMuted, speak]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis.cancel();

@@ -126,23 +126,37 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const claimDailyReward = useCallback(() => {
     const today = new Date().toDateString();
-    if (state.dailyRewardClaimed === today) return null;
 
-    // Calculate streak day
-    let day = 1;
-    if (state.streak > 0) {
-      day = Math.min(state.streak + 1, 7);
-    }
+    // Use functional updater to avoid stale closure on dailyRewardClaimed
+    let response: { xp: number; coins: number; day: number } | null = null;
 
-    const xpReward = day * 10;
-    const coinReward = day * 5;
+    setState((prev) => {
+      if (prev.dailyRewardClaimed === today) {
+        response = null;
+        return prev;
+      }
 
-    addXP(xpReward);
-    addCoins(coinReward);
-    setState((prev) => ({ ...prev, dailyRewardClaimed: today }));
+      // Calculate streak day from the latest state
+      let day = 1;
+      if (prev.streak > 0) {
+        day = Math.min(prev.streak + 1, 7);
+      }
 
-    return { xp: xpReward, coins: coinReward, day };
-  }, [state.dailyRewardClaimed, state.streak, addXP, addCoins, setState]);
+      const xpReward = day * 10;
+      const coinReward = day * 5;
+
+      response = { xp: xpReward, coins: coinReward, day };
+
+      return {
+        ...prev,
+        xp: prev.xp + xpReward,
+        coins: prev.coins + coinReward,
+        dailyRewardClaimed: today,
+      };
+    });
+
+    return response;
+  }, [setState]);
 
   const checkAchievements = useCallback((): string[] => {
     const unlocked: string[] = [];

@@ -1,7 +1,7 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Star, Zap, Code, Rocket, BookOpen, ChevronDown, Heart, Sun, Cloud, Github, Chrome, Smartphone, Monitor, Hash, Rabbit, Puzzle, Palette, Music } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +59,17 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const [mascotMood, setMascotMood] = useState<"wave" | "happy" | "excited" | "celebrate">("wave");
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+
+  // Stable random values for binary animation — computed once, not on every render
+  const binaryPositions = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, i) => ({
+        left: `${i * 5}%`,
+        top: `${Math.random() * 100}%`,
+        digits: Array.from({ length: 10 }, () => (Math.random() > 0.5 ? "1" : "0")).join(""),
+      })),
+    []
+  );
 
   useEffect(() => {
     const moods: Array<"wave" | "happy" | "excited" | "celebrate"> = ["wave", "happy", "excited", "wave", "happy"];
@@ -160,15 +171,15 @@ export default function Landing() {
 
           {/* Binary background */}
           <div className="absolute inset-0 overflow-hidden opacity-[0.03] dark:opacity-[0.05]">
-            {Array.from({ length: 20 }).map((_, i) => (
+            {binaryPositions.map((item, i) => (
               <motion.div
                 key={i}
                 className="absolute font-mono text-xs text-blue-500"
-                style={{ left: `${i * 5}%`, top: `${Math.random() * 100}%` }}
+                style={{ left: item.left, top: item.top }}
                 animate={{ y: [0, -1000] }}
                 transition={{ duration: 20 + i * 3, repeat: Infinity, ease: "linear" }}
               >
-                {Array.from({ length: 10 }).map(() => Math.random() > 0.5 ? "1" : "0").join("")}
+                {item.digits}
               </motion.div>
             ))}
           </div>

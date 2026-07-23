@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, LayoutDashboard, Moon, Sun, Palette, Globe, Sparkles, Heart, User, LogOut, Settings, ChevronDown, Volume2, VolumeX, PaletteIcon } from "lucide-react";
+import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, Palette, Sparkles, Heart, User, LogOut, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGame } from "@/contexts/GameContext";
