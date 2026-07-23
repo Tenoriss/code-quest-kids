@@ -102,7 +102,7 @@ export default function DailyLife() {
       {floatingEmojis.map((emoji, i) => (
         <motion.div
           key={i}
-          className="absolute pointer-events-none select-none opacity-15 dark:opacity-8"
+          className="absolute pointer-events-none select-none opacity-15 dark:opacity-8 will-change-transform"
           style={{ left: `${5 + (i * 9) % 90}%`, top: `${10 + (i * 12) % 80}%` }}
           animate={{ y: [0, -12 - i * 2, 0], rotate: [-5, 5, -5] }}
           transition={{ duration: 5 + i * 0.6, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}

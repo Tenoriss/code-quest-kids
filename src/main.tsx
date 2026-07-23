@@ -129,6 +129,36 @@ function RouteSyncer() {
   return null;
 }
 
+/**
+ * Wraps routes with AnimatePresence keyed by location so exit animations fire.
+ * (AnimatePresence needs a changing key on its direct child to detect leaves.)
+ */
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+        <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+        <Route path="/objectives" element={<ProtectedRoute studentOnly><PageTransition><Objectives /></PageTransition></ProtectedRoute>} />
+        <Route path="/sequence" element={<ProtectedRoute studentOnly><PageTransition><SequenceLesson /></PageTransition></ProtectedRoute>} />
+        <Route path="/sequence-game" element={<ProtectedRoute studentOnly><PageTransition><SequenceGame /></PageTransition></ProtectedRoute>} />
+        <Route path="/algorithm" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmLesson /></PageTransition></ProtectedRoute>} />
+        <Route path="/algorithm-game" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmGame /></PageTransition></ProtectedRoute>} />
+        <Route path="/why-important" element={<ProtectedRoute studentOnly><PageTransition><WhyImportant /></PageTransition></ProtectedRoute>} />
+        <Route path="/daily-life" element={<ProtectedRoute studentOnly><PageTransition><DailyLife /></PageTransition></ProtectedRoute>} />
+        <Route path="/practice" element={<ProtectedRoute studentOnly><PageTransition><Practice /></PageTransition></ProtectedRoute>} />
+        <Route path="/quiz" element={<ProtectedRoute studentOnly><PageTransition><Quiz /></PageTransition></ProtectedRoute>} />
+        <Route path="/certificate" element={<ProtectedRoute studentOnly><PageTransition><Certificate /></PageTransition></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute studentOnly><PageTransition><StudentDashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute studentOnly><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
+        <Route path="/teacher" element={<PageTransition><TeacherDashboard /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RootErrorBoundary>
@@ -140,26 +170,7 @@ createRoot(document.getElementById("root")!).render(
                 <BrowserRouter>
                   <RouteSyncer />
                   <Suspense fallback={<RouteLoading />}>
-                    <AnimatePresence mode="wait">
-                    <Routes>
-                      <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
-                      <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
-                      <Route path="/objectives" element={<ProtectedRoute studentOnly><PageTransition><Objectives /></PageTransition></ProtectedRoute>} />
-                      <Route path="/sequence" element={<ProtectedRoute studentOnly><PageTransition><SequenceLesson /></PageTransition></ProtectedRoute>} />
-                      <Route path="/sequence-game" element={<ProtectedRoute studentOnly><PageTransition><SequenceGame /></PageTransition></ProtectedRoute>} />
-                      <Route path="/algorithm" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmLesson /></PageTransition></ProtectedRoute>} />
-                      <Route path="/algorithm-game" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmGame /></PageTransition></ProtectedRoute>} />
-                      <Route path="/why-important" element={<ProtectedRoute studentOnly><PageTransition><WhyImportant /></PageTransition></ProtectedRoute>} />
-                      <Route path="/daily-life" element={<ProtectedRoute studentOnly><PageTransition><DailyLife /></PageTransition></ProtectedRoute>} />
-                      <Route path="/practice" element={<ProtectedRoute studentOnly><PageTransition><Practice /></PageTransition></ProtectedRoute>} />
-                      <Route path="/quiz" element={<ProtectedRoute studentOnly><PageTransition><Quiz /></PageTransition></ProtectedRoute>} />
-                      <Route path="/certificate" element={<ProtectedRoute studentOnly><PageTransition><Certificate /></PageTransition></ProtectedRoute>} />
-                      <Route path="/dashboard" element={<ProtectedRoute studentOnly><PageTransition><StudentDashboard /></PageTransition></ProtectedRoute>} />
-                      <Route path="/profile" element={<ProtectedRoute studentOnly><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
-                      <Route path="/teacher" element={<PageTransition><TeacherDashboard /></PageTransition>} />
-                      <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-                    </Routes>
-                    </AnimatePresence>
+                    <AnimatedRoutes />
                   </Suspense>
                 </BrowserRouter>
                 <Toaster />

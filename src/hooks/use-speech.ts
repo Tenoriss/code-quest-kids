@@ -45,9 +45,24 @@ function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
 export function useSpeech() {
   const [speaking, setSpeaking] = useState(false);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const voicesReadyRef = useRef(false);
+
+  // Ensure voices are loaded (browsers like Chrome load them async)
+  const ensureVoices = useCallback(() => {
+    if (voicesReadyRef.current) return;
+    if (window.speechSynthesis.getVoices().length > 0) {
+      voicesReadyRef.current = true;
+      return;
+    }
+    // Chrome fires 'voiceschanged' only once after the page first loads
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      voicesReadyRef.current = true;
+    }, { once: true });
+  }, []);
 
   const speak = useCallback((text: string, lang: VoicePreference = "en") => {
     if (!window.speechSynthesis) return;
+    ensureVoices();
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
@@ -56,9 +71,9 @@ export function useSpeech() {
     utterance.lang = lang === "id" ? "id-ID" : "en-US";
 
     // Warm, friendly speech for kids — natural pace with a cheerful tone
-    utterance.rate = 1.1;        // Warm natural pace — lively but not rushed, easy to follow
-    utterance.pitch = 1.15;      // Gentle cheerful lift — friendly without being cartoonish
-    utterance.volume = 1.0;      // Full volume
+    utterance.rate = 1.1;
+    utterance.pitch = 1.15;
+    utterance.volume = 1.0;
 
     // Try to select a natural-sounding voice
     const bestVoice = findBestVoice(lang);
@@ -72,7 +87,7 @@ export function useSpeech() {
     utterance.onerror = () => setSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [ensureVoices]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();

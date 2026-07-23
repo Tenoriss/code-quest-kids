@@ -36,7 +36,7 @@ interface LeaderboardEntry {
 export default function Quiz() {
   const { lang } = useLanguage();
   const { addXP, addQuizScore, completeLesson } = useGame();
-  const [leaderboard] = useLocalStorage<LeaderboardEntry[]>("codequest_leaderboard", []);
+  const [leaderboard, setLeaderboard] = useLocalStorage<LeaderboardEntry[]>("codequest_leaderboard", []);
 
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -49,19 +49,18 @@ export default function Quiz() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!quizOver && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((t) => {
-          if (t <= 1) {
-            setQuizOver(true);
-            return 0;
-          }
-          return t - 1;
-        });
-      }, 1000);
-    }
+    if (quizOver) return;
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          setQuizOver(true);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [quizOver, timeLeft]);
+  }, [quizOver]);
 
   const handleSelect = (index: number) => {
     if (showResult) return;
@@ -90,7 +89,20 @@ export default function Quiz() {
     addQuizScore(score, quizQuestions.length);
     completeLesson("quiz");
     if (score === quizQuestions.length) fireConfetti(100);
-  }, [score, addXP, addQuizScore, completeLesson]);
+
+    // Save to leaderboard
+    const entry: LeaderboardEntry = {
+      name: "Student",
+      score,
+      total: quizQuestions.length,
+      time: 300 - timeLeft,
+      date: new Date().toISOString().slice(0, 10),
+    };
+    setLeaderboard((prev) => {
+      const updated = [...prev, entry].sort((a, b) => b.score - a.score || a.time - b.time);
+      return updated.slice(0, 20);
+    });
+  }, [score, addXP, addQuizScore, completeLesson, timeLeft, setLeaderboard]);
 
 
 
