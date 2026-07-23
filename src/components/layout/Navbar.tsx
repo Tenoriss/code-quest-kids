@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, Palette, Sparkles, Heart, User, LogOut, ChevronDown, Volume2, VolumeX, Music, Music2 } from "lucide-react";
+import logoSvg from "@/assets/logo.svg";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGame } from "@/contexts/GameContext";
@@ -67,11 +68,11 @@ export function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6 }}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md"
+              whileHover={{ scale: 1.1, rotate: [0, -5, 5, -5, 0] }}
+              transition={{ duration: 0.4 }}
+              className="w-10 h-10 rounded-xl overflow-hidden shadow-md"
             >
-              CQ
+              <img src={logoSvg} alt="CodeQuest" className="w-full h-full object-cover" />
             </motion.div>
             <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hidden sm:block">
               {t("app.title")}
