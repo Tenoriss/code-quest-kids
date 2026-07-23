@@ -54,19 +54,8 @@ function ProtectedRoute({ children, studentOnly }: { children: React.ReactNode; 
   return <>{children}</>;
 }
 
-// Simple loading fallback for route transitions
-function RouteLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <span className="text-2xl text-white font-bold">CQ</span>
-        </div>
-        <p className="text-sm text-gray-400">Loading...</p>
-      </div>
-    </div>
-  );
-}
+// Fun animated loading screen with Byte robot
+import LoadingScreen from "@/components/layout/LoadingScreen";
 
 /** Hard guard so runtime errors never leave the preview as a blank page. */
 class RootErrorBoundary extends React.Component<
@@ -169,7 +158,7 @@ createRoot(document.getElementById("root")!).render(
               <GameProvider>
                 <BrowserRouter>
                   <RouteSyncer />
-                  <Suspense fallback={<RouteLoading />}>
+                  <Suspense fallback={<LoadingScreen />}>
                     <AnimatedRoutes />
                   </Suspense>
                 </BrowserRouter>
