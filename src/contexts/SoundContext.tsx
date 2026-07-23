@@ -1,9 +1,11 @@
-import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 interface SoundContextType {
   isMuted: boolean;
   toggleMute: () => void;
+  isMusicPlaying: boolean;
+  toggleMusic: () => void;
   playClick: () => void;
   playHover: () => void;
   playCorrect: () => void;
@@ -14,6 +16,28 @@ interface SoundContextType {
 }
 
 const SoundContext = createContext<SoundContextType | null>(null);
+
+// 🎵 Fun background music melody — a cheerful ascending/descending motif
+const MELODY_NOTES = [
+  // Two octaves of cheerful up-down
+  523.25, // C5
+  587.33, // D5
+  659.25, // E5
+  698.46, // F5
+  783.99, // G5
+  659.25, // E5
+  587.33, // D5
+  523.25, // C5
+  // Second phrase
+  659.25, // E5
+  783.99, // G5
+  1046.50, // C6
+  783.99, // G5
+  659.25, // E5
+  523.25, // C5
+  587.33, // D5
+  659.25, // E5
+];
 
 // Web Audio API-based sound generation
 function createOscillator(
@@ -86,10 +110,89 @@ function playSound(name: string) {
 
 export function SoundProvider({ children }: { children: ReactNode }) {
   const [isMuted, setIsMuted] = useLocalStorage("codequest_muted", false);
+  const [isMusicPlaying, setIsMusicPlaying] = useLocalStorage("codequest_music", false);
+
+  // Refs for music loop
+  const musicCtxRef = useRef<AudioContext | null>(null);
+  const musicTimeoutRef = useRef<number | null>(null);
+  const noteIndexRef = useRef(0);
+
+  const stopMusic = useCallback(() => {
+    if (musicTimeoutRef.current !== null) {
+      clearTimeout(musicTimeoutRef.current);
+      musicTimeoutRef.current = null;
+    }
+    if (musicCtxRef.current) {
+      musicCtxRef.current.close().catch(() => {});
+      musicCtxRef.current = null;
+    }
+    noteIndexRef.current = 0;
+  }, []);
+
+  const playMusicNote = useCallback((ctx: AudioContext, index: number) => {
+    if (index >= MELODY_NOTES.length) {
+      // Loop back to start
+      noteIndexRef.current = 0;
+      musicTimeoutRef.current = window.setTimeout(() => {
+        if (musicCtxRef.current) playMusicNote(musicCtxRef.current, 0);
+      }, 400);
+      return;
+    }
+
+    const freq = MELODY_NOTES[index];
+    const duration = 0.18;
+    const volume = 0.04; // Very quiet background music
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+
+    noteIndexRef.current = index + 1;
+
+    // Schedule next note
+    const gap = index % 4 === 3 ? 250 : 180; // Slightly longer after every 4th note (phrase break)
+    musicTimeoutRef.current = window.setTimeout(() => {
+      if (musicCtxRef.current) playMusicNote(musicCtxRef.current, noteIndexRef.current);
+    }, gap);
+  }, []);
+
+  const startMusic = useCallback(() => {
+    stopMusic();
+    try {
+      const ctx = new AudioContext();
+      musicCtxRef.current = ctx;
+      noteIndexRef.current = 0;
+      playMusicNote(ctx, 0);
+    } catch {
+      // Audio not available
+    }
+  }, [stopMusic, playMusicNote]);
+
+  // Start/stop music based on isMusicPlaying
+  useEffect(() => {
+    if (isMusicPlaying) {
+      startMusic();
+    } else {
+      stopMusic();
+    }
+    return () => {
+      stopMusic();
+    };
+  }, [isMusicPlaying, startMusic, stopMusic]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
   }, [setIsMuted]);
+
+  const toggleMusic = useCallback(() => {
+    setIsMusicPlaying((prev) => !prev);
+  }, [setIsMusicPlaying]);
 
   const playClick = useCallback(() => {
     if (!isMuted) playSound("click");
@@ -121,7 +224,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
   return (
     <SoundContext.Provider
-      value={{ isMuted, toggleMute, playClick, playHover, playCorrect, playWrong, playAchievement, playLevelUp, playConfetti }}
+      value={{ isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover, playCorrect, playWrong, playAchievement, playLevelUp, playConfetti }}
     >
       {children}
     </SoundContext.Provider>

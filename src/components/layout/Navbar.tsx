@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, Palette, Sparkles, Heart, User, LogOut, ChevronDown, Volume2, VolumeX } from "lucide-react";
+import { Menu, X, Home, BookOpen, ListOrdered, GitBranch, Brain, Trophy, Palette, Sparkles, Heart, User, LogOut, ChevronDown, Volume2, VolumeX, Music, Music2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGame } from "@/contexts/GameContext";
@@ -27,7 +27,7 @@ export function Navbar() {
   const { lang, setLang, t } = useLanguage();
   const { state } = useGame();
   const { isAuthenticated, currentUserProfile, logout } = useAuth();
-  const { isMuted, toggleMute, playClick, playHover } = useSound();
+  const { isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover } = useSound();
 
   const handleLogout = () => {
     logout();
@@ -96,11 +96,35 @@ export function Navbar() {
               </div>
             </div>
 
-            {/* Sound toggle */}
+            {/* Music toggle */}
+            <motion.button
+              onClick={toggleMusic}
+              whileHover={{ scale: 1.1, rotate: isMusicPlaying ? [0, -10, 10, -10, 0] : 0 }}
+              whileTap={{ scale: 0.9 }}
+              className={`p-2 rounded-lg transition-colors ${
+                isMusicPlaying
+                  ? "bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 text-pink-500 dark:text-pink-300 shadow-sm"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+              }`}
+              title={isMusicPlaying ? "Stop Music" : "Play Music 🎵"}
+            >
+              {isMusicPlaying ? (
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <Music2 className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <Music className="w-4 h-4" />
+              )}
+            </motion.button>
+
+            {/* Sound effects toggle */}
             <button
               onClick={toggleMute}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              title={isMuted ? "Unmute" : "Mute"}
+              title={isMuted ? "Unmute sounds" : "Mute sounds"}
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-gray-400" /> : <Volume2 className="w-4 h-4 text-gray-500" />}
             </button>
@@ -302,14 +326,25 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* Sound & Language */}
+              {/* Sound, Music & Language */}
               <div className="flex items-center gap-2 px-3 pt-2">
+                <button
+                  onClick={toggleMusic}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                    isMusicPlaying
+                      ? "bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 text-pink-500"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                  }`}
+                >
+                  {isMusicPlaying ? <Music2 className="w-3 h-3" /> : <Music className="w-3 h-3" />}
+                  {isMusicPlaying ? "🎵 Music" : "🎵 Play"}
+                </button>
                 <button
                   onClick={toggleMute}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
                 >
                   {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                  {isMuted ? "Muted" : "Sound"}
+                  {isMuted ? "🔇 Muted" : "🔊 Sound"}
                 </button>
                 <button
                   onClick={() => setLang(lang === "en" ? "id" : "en")}
