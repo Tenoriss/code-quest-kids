@@ -10,10 +10,8 @@ function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
 
-  // Preferred voice names (most natural-sounding first)
+  // Preferred voice names (most natural-sounding first, no UK accent)
   const preferredEnglish = [
-    "Google UK English Female",
-    "Google UK English Male",
     "Google US English",
     "Microsoft Zira",
     "Microsoft David",
