@@ -39,18 +39,31 @@ const reasons = [
   },
 ];
 
+const floatingEmojis = ["🌟", "🧩", "💡", "✅", "💻", "🏠", "🎯", "🚀", "💪", "🌈"];
+
 export default function WhyImportant() {
   const { lang } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-green-50/20 to-teal-50/20 dark:from-gray-950 dark:via-green-950/5 dark:to-teal-950/5">
+    <div className="min-h-screen bg-gradient-to-b from-white via-green-50/20 to-teal-50/20 dark:from-gray-950 dark:via-green-950/5 dark:to-teal-950/5 relative overflow-hidden">
+      {/* Floating emoji decorations */}
+      {floatingEmojis.map((emoji, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none select-none opacity-20 dark:opacity-10"
+          style={{ left: `${5 + (i * 10) % 90}%`, top: `${8 + (i * 15) % 80}%` }}
+          animate={{ y: [0, -15 - i * 2, 0], rotate: [0, 8, -8, 0] }}
+          transition={{ duration: 4 + i * 0.5, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }}
+        >
+          <span className="text-2xl sm:text-3xl">{emoji}</span>
+        </motion.div>
+      ))}
       <Navbar />
       <AIAssistant
         type="welcome"
         message={lang === "en" ? "Let's discover why sequences and algorithms are super important in our daily lives!" : "Ayo temukan mengapa urutan dan algoritma sangat penting dalam kehidupan sehari-hari!"}
-        autoSpeak
       />
 
       <main className="pt-32 pb-20 px-4">

@@ -10,7 +10,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AIAssistant } from "@/components/layout/AIAssistant";
-import { fireConfetti } from "@/lib/confetti";
+import { fireConfetti, fireSparkles } from "@/lib/confetti";
 
 const quizQuestions = [
   { id: 1, question: { en: "What is a sequence?", id: "Apa itu urutan?" }, options: { en: ["The correct order of steps to complete a task", "A random collection of items", "A type of computer virus", "A dance move"], id: ["Urutan langkah yang benar untuk menyelesaikan tugas", "Kumpulan acak barang", "Jenis virus komputer", "Gerakan dansa"] }, correct: 0, explanation: { en: "A sequence is the correct order of steps to complete a task. Order matters!", id: "Urutan adalah langkah-langkah yang benar untuk menyelesaikan tugas. Urutan itu penting!" } },
@@ -67,7 +67,10 @@ export default function Quiz() {
     if (showResult) return;
     setSelected(index);
     setShowResult(true);
-    if (index === quizQuestions[currentQ].correct) setScore((s) => s + 1);
+    if (index === quizQuestions[currentQ].correct) {
+      setScore((s) => s + 1);
+      fireSparkles(15);
+    }
   };
 
   const handleNext = () => {

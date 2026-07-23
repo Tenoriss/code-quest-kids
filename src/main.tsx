@@ -1,6 +1,7 @@
 import '@vly-ai/integrations';
 import { Toaster } from "@/components/ui/sonner";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router";
 import "./index.css";
@@ -29,6 +30,20 @@ const Certificate = lazy(() => import("./pages/Certificate.tsx"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard.tsx"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
+
+// Fun page transition wrapper
+function PageTransition({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 // Auth route guard
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,24 +140,26 @@ createRoot(document.getElementById("root")!).render(
                 <BrowserRouter>
                   <RouteSyncer />
                   <Suspense fallback={<RouteLoading />}>
+                    <AnimatePresence mode="wait">
                     <Routes>
-                      <Route path="/" element={<Landing />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/objectives" element={<ProtectedRoute studentOnly><Objectives /></ProtectedRoute>} />
-                      <Route path="/sequence" element={<ProtectedRoute studentOnly><SequenceLesson /></ProtectedRoute>} />
-                      <Route path="/sequence-game" element={<ProtectedRoute studentOnly><SequenceGame /></ProtectedRoute>} />
-                      <Route path="/algorithm" element={<ProtectedRoute studentOnly><AlgorithmLesson /></ProtectedRoute>} />
-                      <Route path="/algorithm-game" element={<ProtectedRoute studentOnly><AlgorithmGame /></ProtectedRoute>} />
-                      <Route path="/why-important" element={<ProtectedRoute studentOnly><WhyImportant /></ProtectedRoute>} />
-                      <Route path="/daily-life" element={<ProtectedRoute studentOnly><DailyLife /></ProtectedRoute>} />
-                      <Route path="/practice" element={<ProtectedRoute studentOnly><Practice /></ProtectedRoute>} />
-                      <Route path="/quiz" element={<ProtectedRoute studentOnly><Quiz /></ProtectedRoute>} />
-                      <Route path="/certificate" element={<ProtectedRoute studentOnly><Certificate /></ProtectedRoute>} />
-                      <Route path="/dashboard" element={<ProtectedRoute studentOnly><StudentDashboard /></ProtectedRoute>} />
-                      <Route path="/profile" element={<ProtectedRoute studentOnly><Profile /></ProtectedRoute>} />
-                      <Route path="/teacher" element={<TeacherDashboard />} />
-                      <Route path="*" element={<NotFound />} />
+                      <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+                      <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+                      <Route path="/objectives" element={<ProtectedRoute studentOnly><PageTransition><Objectives /></PageTransition></ProtectedRoute>} />
+                      <Route path="/sequence" element={<ProtectedRoute studentOnly><PageTransition><SequenceLesson /></PageTransition></ProtectedRoute>} />
+                      <Route path="/sequence-game" element={<ProtectedRoute studentOnly><PageTransition><SequenceGame /></PageTransition></ProtectedRoute>} />
+                      <Route path="/algorithm" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmLesson /></PageTransition></ProtectedRoute>} />
+                      <Route path="/algorithm-game" element={<ProtectedRoute studentOnly><PageTransition><AlgorithmGame /></PageTransition></ProtectedRoute>} />
+                      <Route path="/why-important" element={<ProtectedRoute studentOnly><PageTransition><WhyImportant /></PageTransition></ProtectedRoute>} />
+                      <Route path="/daily-life" element={<ProtectedRoute studentOnly><PageTransition><DailyLife /></PageTransition></ProtectedRoute>} />
+                      <Route path="/practice" element={<ProtectedRoute studentOnly><PageTransition><Practice /></PageTransition></ProtectedRoute>} />
+                      <Route path="/quiz" element={<ProtectedRoute studentOnly><PageTransition><Quiz /></PageTransition></ProtectedRoute>} />
+                      <Route path="/certificate" element={<ProtectedRoute studentOnly><PageTransition><Certificate /></PageTransition></ProtectedRoute>} />
+                      <Route path="/dashboard" element={<ProtectedRoute studentOnly><PageTransition><StudentDashboard /></PageTransition></ProtectedRoute>} />
+                      <Route path="/profile" element={<ProtectedRoute studentOnly><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
+                      <Route path="/teacher" element={<PageTransition><TeacherDashboard /></PageTransition>} />
+                      <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                     </Routes>
+                    </AnimatePresence>
                   </Suspense>
                 </BrowserRouter>
                 <Toaster />

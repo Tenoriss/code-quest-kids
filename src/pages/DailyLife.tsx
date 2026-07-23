@@ -89,18 +89,31 @@ const examples = [
   },
 ];
 
+const floatingEmojis = ["🪥", "🧼", "🫖", "🍪", "🌱", "🏫", "☀️", "🌈", "🎒", "🍳"];
+
 export default function DailyLife() {
   const { lang } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-amber-50/20 to-orange-50/20 dark:from-gray-950 dark:via-amber-950/5 dark:to-orange-950/5">
+    <div className="min-h-screen bg-gradient-to-b from-white via-amber-50/20 to-orange-50/20 dark:from-gray-950 dark:via-amber-950/5 dark:to-orange-950/5 relative overflow-hidden">
+      {/* Floating emoji decorations */}
+      {floatingEmojis.map((emoji, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none select-none opacity-15 dark:opacity-8"
+          style={{ left: `${5 + (i * 9) % 90}%`, top: `${10 + (i * 12) % 80}%` }}
+          animate={{ y: [0, -12 - i * 2, 0], rotate: [-5, 5, -5] }}
+          transition={{ duration: 5 + i * 0.6, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
+        >
+          <span className="text-xl sm:text-2xl">{emoji}</span>
+        </motion.div>
+      ))}
       <Navbar />
       <AIAssistant
         type="welcome"
         message={lang === "en" ? "Sequences and algorithms are everywhere! Look at all these daily activities that follow a sequence!" : "Urutan dan algoritma ada di mana-mana! Lihat semua aktivitas sehari-hari yang mengikuti urutan!"}
-        autoSpeak
       />
 
       <main className="pt-32 pb-20 px-4">

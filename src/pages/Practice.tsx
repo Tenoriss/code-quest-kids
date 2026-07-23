@@ -8,7 +8,7 @@ import { useGame } from "@/contexts/GameContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AIAssistant } from "@/components/layout/AIAssistant";
-import { fireConfetti } from "@/lib/confetti";
+import { fireConfetti, fireSparkles } from "@/lib/confetti";
 
 interface Question {
   type: "multiple" | "truefalse";
@@ -87,7 +87,10 @@ export default function Practice() {
     setSelected(index);
     setShowResult(true);
     const isCorrect = index === questions[currentQ].correct;
-    if (isCorrect) setScore((s) => s + 1);
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      fireSparkles(12);
+    }
     setAnswers((prev) => [...prev, isCorrect]);
   };
 
