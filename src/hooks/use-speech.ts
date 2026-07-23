@@ -103,36 +103,50 @@ export function useSpeech() {
       window.speechSynthesis.addEventListener("voiceschanged", handler);
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === "id" ? "id-ID" : "en-US";
+    // --- Expressive per-language voice settings ---
+    // Slower rate + higher pitch = more animated, warm, and engaging
+    const rate = lang === "id" ? 0.92 : 0.95;
+    const pitch = lang === "id" ? 1.35 : 1.3;
 
-    // --- Per-language fun & natural speech settings ---
-    if (lang === "id") {
-      // Indonesian is more syllabic — natural pace with a friendly, cheerful lift
-      utterance.rate = 1.05;  // Slightly relaxed — easy to follow every syllable
-      utterance.pitch = 1.2;  // Bright and cheerful, like a friendly teacher
-      utterance.volume = 1.0;
-    } else {
-      // English — warm, bouncy, and engaging for kids
-      utterance.rate = 1.1;   // Lively but not rushed
-      utterance.pitch = 1.15; // Gentle cheerful lift
-      utterance.volume = 1.0;
+    // Split long text into sentences so we can add micro-pauses between them.
+    // This makes the speech sound more natural and expressive than a single
+    // flat utterance.
+    const sentences = text.match(/[^.!?]*[.!?]+/g) || [text];
+
+    let delay = 0;
+    for (const sentence of sentences) {
+      const trimmed = sentence.trim();
+      if (!trimmed) continue;
+
+      setTimeout(() => {
+        if (!window.speechSynthesis) return;
+
+        const u = new SpeechSynthesisUtterance(trimmed);
+        u.lang = lang === "id" ? "id-ID" : "en-US";
+        u.rate = rate;
+        u.pitch = pitch;
+        u.volume = 1.0;
+
+        const bestVoice = findBestVoice(lang);
+        if (bestVoice) {
+          u.voice = bestVoice;
+        }
+
+        // Only the first utterance sets speaking=true; the last sets speaking=false
+        if (delay === 0) {
+          u.onstart = () => setSpeaking(true);
+        }
+        if (delay === (sentences.length - 1) * 250) {
+          u.onend = () => setSpeaking(false);
+          u.onerror = () => setSpeaking(false);
+        }
+
+        utterRef.current = u;
+        window.speechSynthesis.speak(u);
+      }, delay);
+
+      delay += 250; // micro-pause between sentences (~250ms)
     }
-
-    // Select a natural-sounding voice
-    const bestVoice = findBestVoice(lang);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    // Keep a reference so the browser doesn't garbage-collect mid-speech
-    utterRef.current = utterance;
-
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
   }, []);
 
   const stop = useCallback(() => {
