@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, TrendingUp, Award, Calendar, BarChart3, BookOpen, CheckCircle2,
   Search, Download, Star, Flame, Zap, Clock, Target, GraduationCap,
-  PieChart, Activity, ChevronDown, X, Trophy
+  PieChart, Activity, ChevronDown, X, Trophy, Pencil, FileText, Plus, Save, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -27,7 +29,7 @@ interface StudentData {
   totalTime: number; lastActive: string; achievements: string[]; country: string;
   attendance: number[];
 }
-type TabView = "overview" | "students" | "analytics" | "attendance";
+type TabView = "overview" | "students" | "analytics" | "attendance" | "questions" | "materials";
 type SortField = "name" | "xp" | "level" | "streak" | "grade" | "completed";
 interface AnalyticsData {
   total: number; avgXP: number; avgLevel: number; avgScore: number;
@@ -114,10 +116,10 @@ export default function TeacherDashboard() {
               </div>
             </div>
           </motion.div>
-          <div className="flex gap-1 mb-8 bg-white/50 dark:bg-gray-800/30 rounded-2xl p-1 border border-gray-200/50 dark:border-gray-700/30 max-w-lg">
-            {([["overview",Activity,{en:"Overview",id:"Ikhtisar"}],["students",Users,{en:"Students",id:"Siswa"}],["analytics",BarChart3,{en:"Analytics",id:"Analitik"}],["attendance",Calendar,{en:"Attendance",id:"Kehadiran"}]] as const).map(([id,Icon,label]) => (
+          <div className="flex gap-1 mb-8 bg-white/50 dark:bg-gray-800/30 rounded-2xl p-1 border border-gray-200/50 dark:border-gray-700/30 overflow-x-auto max-w-3xl">
+            {([["overview",Activity,{en:"Overview",id:"Ikhtisar"}],["students",Users,{en:"Students",id:"Siswa"}],["analytics",BarChart3,{en:"Analytics",id:"Analitik"}],["attendance",Calendar,{en:"Attendance",id:"Kehadiran"}],["questions",Pencil,{en:"Questions",id:"Soal"}],["materials",FileText,{en:"Materials",id:"Materi"}]] as const).map(([id,Icon,label]) => (
               <button key={id} onClick={()=>setTab(id as TabView)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${tab===id?"bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-300 shadow-sm":"text-gray-500 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"}`}>
+                className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${tab===id?"bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-300 shadow-sm":"text-gray-500 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"}`}>
                 <Icon className="w-4 h-4"/><span className="hidden sm:inline">{label[lang]}</span>
               </button>
             ))}
@@ -127,6 +129,8 @@ export default function TeacherDashboard() {
             {tab==="students"&&<Students key="st" students={filtered} q={q} setQ={setQ} sf={sf} sa={sa} tog={tog} gf={gf} setGf={setGf} sel={sel} setSel={setSel} sd={sd} setSd={setSd} lang={lang} />}
             {tab==="analytics"&&<Analytics key="an" an={an} students={students} lang={lang} />}
             {tab==="attendance"&&<Attendance key="at" students={students} aw={aw} setAw={setAw} sel={sel} sd={ad} onSelect={(s:StudentData)=>{setSel(s);setAd(true)}} onClose={()=>setAd(false)} lang={lang} />}
+            {tab==="questions"&&<EditQuestions key="eq" lang={lang} />}
+            {tab==="materials"&&<EditMaterials key="em" lang={lang} />}
           </AnimatePresence>
         </div>
       </main>
@@ -418,6 +422,236 @@ function Attendance({students,aw,setAw,sel,sd,onSelect,onClose,lang}:{
         </div>
       </div>
       <AnimatePresence>{sd&&sel&&<StudentModal student={sel} onClose={onClose} lang={lang}/>}</AnimatePresence>
+    </motion.div>
+  );
+}
+
+// EDIT QUESTIONS
+function EditQuestions({lang}:{lang:"en"|"id"}) {
+  const defaultQuestions = [
+    { id:1, question:{en:"What is a sequence?",id:"Apa itu urutan?"}, answer:{en:"The correct order of steps",id:"Urutan langkah yang benar"} },
+    { id:2, question:{en:"What is an algorithm?",id:"Apa itu algoritma?"}, answer:{en:"Step-by-step instructions",id:"Instruksi langkah demi langkah"} },
+    { id:3, question:{en:"Why are sequences important?",id:"Mengapa urutan penting?"}, answer:{en:"To complete tasks correctly",id:"Untuk menyelesaikan tugas dengan benar"} },
+  ];
+  const [questions, setQuestions] = useState(defaultQuestions);
+  const [editingId, setEditingId] = useState<number|null>(null);
+  const [editQ, setEditQ] = useState({en:"",id:""});
+  const [editA, setEditA] = useState({en:"",id:""});
+
+  const startEdit = (q:typeof questions[0]) => {
+    setEditingId(q.id);
+    setEditQ(q.question);
+    setEditA(q.answer);
+  };
+
+  const saveEdit = () => {
+    if (!editQ.en.trim() || !editA.en.trim()) return;
+    setQuestions(prev => prev.map(q => q.id === editingId ? {...q, question:editQ, answer:editA} : q));
+    setEditingId(null);
+  };
+
+  const addQuestion = () => {
+    const newId = Math.max(...questions.map(q=>q.id)) + 1;
+    setQuestions([...questions, { id:newId, question:{en:"New question",id:"Pertanyaan baru"}, answer:{en:"New answer",id:"Jawaban baru"} }]);
+    startEdit({ id:newId, question:{en:"New question",id:"Pertanyaan baru"}, answer:{en:"New answer",id:"Jawaban baru"} });
+  };
+
+  const deleteQuestion = (id:number) => {
+    setQuestions(prev => prev.filter(q => q.id !== id));
+  };
+
+  return (
+    <motion.div key="eq" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0}} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <Pencil className="w-5 h-5 text-emerald-500"/>
+            {lang==="en"?"Edit Questions":"Edit Soal"}
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">{lang==="en"?"Manage quiz questions and lesson Q&A":"Kelola soal kuis dan Tanya Jawab pelajaran"}</p>
+        </div>
+        <Button onClick={addQuestion} className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm h-10">
+          <Plus className="w-4 h-4 mr-1"/>{lang==="en"?"Add Question":"Tambah Soal"}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {questions.map((q,i) => (
+          <motion.div
+            key={q.id}
+            initial={{opacity:0,y:10}}
+            animate={{opacity:1,y:0}}
+            transition={{delay:i*0.05}}
+            className="bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/30 overflow-hidden"
+          >
+            {editingId === q.id ? (
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Question (English):":"Soal (English):"}</label>
+                  <Input value={editQ.en} onChange={e=>setEditQ(p=>({...p,en:e.target.value}))} className="rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Question (Indonesian):":"Soal (Indonesia):"}</label>
+                  <Input value={editQ.id} onChange={e=>setEditQ(p=>({...p,id:e.target.value}))} className="rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Answer (English):":"Jawaban (English):"}</label>
+                  <Textarea value={editA.en} onChange={e=>setEditA(p=>({...p,en:e.target.value}))} className="rounded-xl text-sm min-h-[60px]" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Answer (Indonesian):":"Jawaban (Indonesia):"}</label>
+                  <Textarea value={editA.id} onChange={e=>setEditA(p=>({...p,id:e.target.value}))} className="rounded-xl text-sm min-h-[60px]" />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" size="sm" onClick={()=>setEditingId(null)} className="rounded-xl text-xs">
+                    {lang==="en"?"Cancel":"Batal"}
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} className="rounded-xl text-xs bg-emerald-500 hover:bg-emerald-600 text-white">
+                    <Save className="w-3 h-3 mr-1"/>{lang==="en"?"Save":"Simpan"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 flex items-start gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white text-xs font-bold shrink-0">
+                  {i+1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{q.question[lang]}</p>
+                  <p className="text-xs text-gray-400 mt-1 line-clamp-2">{q.answer[lang]}</p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={()=>startEdit(q)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-500 transition-colors">
+                    <Pencil className="w-4 h-4"/>
+                  </button>
+                  <button onClick={()=>deleteQuestion(q.id)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500 transition-colors">
+                    <Trash2 className="w-4 h-4"/>
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="text-center text-xs text-gray-400 p-4">
+        {lang==="en"?`${questions.length} questions total`:`${questions.length} total soal`}
+      </div>
+    </motion.div>
+  );
+}
+
+// EDIT MATERIALS
+function EditMaterials({lang}:{lang:"en"|"id"}) {
+  const defaultMaterials = [
+    { id:1, title:{en:"What is Sequence?",id:"Apa itu Urutan?"}, content:{en:"A sequence is the correct order of steps to complete a task. For example: Wake up → Brush teeth → Take a bath → Eat breakfast → Go to school.",id:"Urutan adalah langkah yang benar untuk menyelesaikan tugas. Contoh: Bangun → Gosok gigi → Mandi → Sarapan → Pergi ke sekolah."} },
+    { id:2, title:{en:"What is Algorithm?",id:"Apa itu Algoritma?"}, content:{en:"An algorithm is a step-by-step instruction used to solve a problem. For example: 1. Boil water 2. Add noodles 3. Wait 4. Add seasoning 5. Stir 6. Enjoy.",id:"Algoritma adalah instruksi langkah demi langkah untuk memecahkan masalah. Contoh: 1. Rebus air 2. Masukkan mie 3. Tunggu 4. Tambahkan bumbu 5. Aduk 6. Nikmati."} },
+    { id:3, title:{en:"Why Are Sequences Important?",id:"Mengapa Urutan Penting?"}, content:{en:"Sequences help us solve problems, reduce mistakes, organize daily life, and write computer programs.",id:"Urutan membantu kita memecahkan masalah, mengurangi kesalahan, mengatur kehidupan sehari-hari, dan menulis program komputer."} },
+  ];
+  const [materials, setMaterials] = useState(defaultMaterials);
+  const [editingId, setEditingId] = useState<number|null>(null);
+  const [editTitle, setEditTitle] = useState({en:"",id:""});
+  const [editContent, setEditContent] = useState({en:"",id:""});
+
+  const startEdit = (m:typeof materials[0]) => {
+    setEditingId(m.id);
+    setEditTitle(m.title);
+    setEditContent(m.content);
+  };
+
+  const saveEdit = () => {
+    if (!editTitle.en.trim() || !editContent.en.trim()) return;
+    setMaterials(prev => prev.map(m => m.id === editingId ? {...m, title:editTitle, content:editContent} : m));
+    setEditingId(null);
+  };
+
+  const addMaterial = () => {
+    const newId = Math.max(...materials.map(m=>m.id)) + 1;
+    setMaterials([...materials, { id:newId, title:{en:"New material",id:"Materi baru"}, content:{en:"Content",id:"Konten"} }]);
+    startEdit({ id:newId, title:{en:"New material",id:"Materi baru"}, content:{en:"Content",id:"Konten"} });
+  };
+
+  const deleteMaterial = (id:number) => {
+    setMaterials(prev => prev.filter(m => m.id !== id));
+  };
+
+  return (
+    <motion.div key="em" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0}} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-500"/>
+            {lang==="en"?"Edit Materials":"Edit Materi"}
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">{lang==="en"?"Manage lesson content and learning materials":"Kelola konten pelajaran dan materi belajar"}</p>
+        </div>
+        <Button onClick={addMaterial} className="rounded-full bg-blue-500 hover:bg-blue-600 text-white text-sm h-10">
+          <Plus className="w-4 h-4 mr-1"/>{lang==="en"?"Add Material":"Tambah Materi"}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {materials.map((m,i) => (
+          <motion.div
+            key={m.id}
+            initial={{opacity:0,y:10}}
+            animate={{opacity:1,y:0}}
+            transition={{delay:i*0.05}}
+            className="bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/30 overflow-hidden"
+          >
+            {editingId === m.id ? (
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Title (English):":"Judul (English):"}</label>
+                  <Input value={editTitle.en} onChange={e=>setEditTitle(p=>({...p,en:e.target.value}))} className="rounded-xl text-sm font-medium" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Title (Indonesian):":"Judul (Indonesia):"}</label>
+                  <Input value={editTitle.id} onChange={e=>setEditTitle(p=>({...p,id:e.target.value}))} className="rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Content (English):":"Konten (English):"}</label>
+                  <Textarea value={editContent.en} onChange={e=>setEditContent(p=>({...p,en:e.target.value}))} className="rounded-xl text-sm min-h-[100px]" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{lang==="en"?"Content (Indonesian):":"Konten (Indonesia):"}</label>
+                  <Textarea value={editContent.id} onChange={e=>setEditContent(p=>({...p,id:e.target.value}))} className="rounded-xl text-sm min-h-[100px]" />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" size="sm" onClick={()=>setEditingId(null)} className="rounded-xl text-xs">
+                    {lang==="en"?"Cancel":"Batal"}
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} className="rounded-xl text-xs bg-blue-500 hover:bg-blue-600 text-white">
+                    <Save className="w-3 h-3 mr-1"/>{lang==="en"?"Save":"Simpan"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-lg shrink-0">
+                  📄
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{m.title[lang]}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{m.content[lang]}</p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={()=>startEdit(m)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-500 transition-colors">
+                    <Pencil className="w-4 h-4"/>
+                  </button>
+                  <button onClick={()=>deleteMaterial(m.id)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500 transition-colors">
+                    <Trash2 className="w-4 h-4"/>
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="text-center text-xs text-gray-400 p-4">
+        {lang==="en"?`${materials.length} materials total`:`${materials.length} total materi`}
+      </div>
     </motion.div>
   );
 }

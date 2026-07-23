@@ -9,13 +9,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { Button } from "@/components/ui/button";
 
-const NAV_ITEMS = [
+const STUDENT_NAV = [
   { path: "/", label: { en: "Home", id: "Beranda" }, icon: Home },
   { path: "/objectives", label: { en: "Objectives", id: "Tujuan" }, icon: BookOpen },
   { path: "/sequence", label: { en: "Sequence", id: "Urutan" }, icon: ListOrdered },
   { path: "/algorithm", label: { en: "Algorithm", id: "Algoritma" }, icon: GitBranch },
   { path: "/quiz", label: { en: "Quiz", id: "Kuis" }, icon: Brain },
   { path: "/dashboard", label: { en: "Dashboard", id: "Dasbor" }, icon: Trophy },
+];
+
+const TEACHER_NAV = [
+  { path: "/teacher", label: { en: "Dashboard", id: "Dasbor" }, icon: Trophy },
 ];
 
 export function Navbar() {
@@ -27,6 +31,8 @@ export function Navbar() {
   const { lang, setLang, t } = useLanguage();
   const { state } = useGame();
   const { isAuthenticated, currentUserProfile, logout } = useAuth();
+  const isTeacher = isAuthenticated && currentUserProfile?.role === "teacher";
+  const NAV_ITEMS = isTeacher ? TEACHER_NAV : STUDENT_NAV;
   const { isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover } = useSound();
 
   const handleLogout = () => {
@@ -206,12 +212,20 @@ export function Navbar() {
                         </p>
                         <p className="text-xs text-gray-400 truncate">{currentUserProfile?.email}</p>
                       </div>
-                      <Link to="/dashboard" onClick={() => setShowUserMenu(false)}>
-                        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                          <Trophy className="w-4 h-4" /> Dashboard
-                        </button>
-                      </Link>
-                      <Link to="/profile" onClick={() => setShowUserMenu(false)}>
+                      {isTeacher ? (
+                        <Link to="/teacher" onClick={() => setShowUserMenu(false)}>
+                          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <Trophy className="w-4 h-4" /> Teacher Dashboard
+                          </button>
+                        </Link>
+                      ) : (
+                        <Link to="/dashboard" onClick={() => setShowUserMenu(false)}>
+                          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <Trophy className="w-4 h-4" /> Dashboard
+                          </button>
+                        </Link>
+                      )}
+                      <Link to={isTeacher ? "/teacher" : "/profile"} onClick={() => setShowUserMenu(false)}>
                         <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                           <User className="w-4 h-4" /> Profile
                         </button>

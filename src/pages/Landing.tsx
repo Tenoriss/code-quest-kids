@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, lazy } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart, BookOpen, Award, Clock, Flame, Target, CheckCircle, Zap } from "lucide-react";
@@ -809,10 +809,16 @@ function StudentHome() {
 // LANDING — Smart Router
 // ============================================================
 
+const TeacherDashboard = lazy(() => import("./TeacherDashboard.tsx"));
+
 export default function Landing() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUserProfile } = useAuth();
 
   if (isAuthenticated) {
+    // Teachers see their dashboard instead of student home
+    if (currentUserProfile?.role === "teacher") {
+      return <TeacherDashboard />;
+    }
     return <StudentHome />;
   }
 

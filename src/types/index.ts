@@ -60,6 +60,7 @@ export interface UserProfile {
   nickname: string;
   email: string;
   password: string;
+  role?: "student" | "teacher";
   birthday: string;
   grade: string;
   country: string;
