@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Sparkles, X } from "lucide-react";
 import { useSpeech } from "@/hooks/use-speech";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AIAssistantProps {
   message: string;
@@ -30,16 +31,17 @@ export function AIAssistant({ message, hint, type = "welcome", autoSpeak = false
   const [isOpen, setIsOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const { speak, stop, speaking } = useSpeech();
+  const { lang } = useLanguage();
 
   useEffect(() => {
     if (autoSpeak) {
       const timer = setTimeout(() => {
         setIsOpen(true);
-        speak(message);
+        speak(message, lang);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [autoSpeak, message, speak]);
+  }, [autoSpeak, message, speak, lang]);
 
   return (
     <>
@@ -47,7 +49,7 @@ export function AIAssistant({ message, hint, type = "welcome", autoSpeak = false
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => { setIsOpen(!isOpen); if (!isOpen) speak(message); }}
+        onClick={() => { setIsOpen(!isOpen); if (!isOpen) speak(message, lang); }}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center"
       >
         <AnimatePresence mode="wait">
@@ -97,7 +99,7 @@ export function AIAssistant({ message, hint, type = "welcome", autoSpeak = false
                 </div>
               </div>
               <button
-                onClick={() => speaking ? stop() : speak(message)}
+                onClick={() => speaking ? stop() : speak(message, lang)}
                 className="mt-2 text-xs flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
               >
                 {speaking ? "🔊 Stop" : "🔈 Listen"}
