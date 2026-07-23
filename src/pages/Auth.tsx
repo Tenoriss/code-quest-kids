@@ -219,6 +219,7 @@ export default function AuthPage() {
             >
               <Byte
                 mood={byteMood}
+                noVoice
               />
               <motion.div
                 animate={{ y: [0, -5, 0] }}
@@ -288,7 +289,7 @@ export default function AuthPage() {
 
                 {/* Byte greeting for mobile */}
                 <div className="lg:hidden mb-4">
-                  <Byte mood={byteMood} />
+                  <Byte mood={byteMood} noVoice />
                 </div>
 
                 {verificationStep ? (
