@@ -3,91 +3,137 @@ import { useCallback, useRef, useState } from "react";
 type VoicePreference = "en" | "id";
 
 /**
- * Find the most natural-sounding voice for the given language.
- * Prioritises premium Google/Windows voices, then falls back to any available voice.
+ * Normalise a language tag so "id_ID" and "id-ID" are treated the same.
+ */
+function normLang(raw: string): string {
+  return raw.replace("_", "-").toLowerCase();
+}
+
+/**
+ * Find the best voice for the given language.
+ *
+ * Indonesian (id-ID) known names across platforms:
+ *   - Chrome:    "Google Bahasa Indonesia"
+ *   - macOS/iOS: "Damayanti"
+ *   - Windows:   "Microsoft Andika"
+ *
+ * English (en-US) known names (no UK accent):
+ *   - Chrome:  "Google US English"
+ *   - Windows: "Microsoft Zira", "Microsoft David"
+ *   - macOS:   "Samantha", "Karen"
  */
 function findBestVoice(lang: VoicePreference): SpeechSynthesisVoice | null {
+  if (!window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
-  if (voices.length === 0) return null;
+  if (!voices || voices.length === 0) return null;
 
-  // Preferred voice names (most natural-sounding first, no UK accent)
-  const preferredEnglish = [
-    "Google US English",
-    "Microsoft Zira",
-    "Microsoft David",
-    "Samantha",
-    "Karen",
-  ];
+  const langPrefix = lang === "id" ? "id" : "en";
 
-  const preferredIndonesian = [
-    "Google Indonesia Female",
-    "Microsoft Andika",
-  ];
+  // --- Voice-matching strategies (tried in order) ---
 
-  const preferred = lang === "id" ? preferredIndonesian : preferredEnglish;
+  // 1. Match by keyword(s) in the voice name (most specific first)
+  const nameKeywords =
+    lang === "id"
+      ? [
+          ["Google", "Indonesia"],
+          ["Google", "Bahasa"],
+          ["Damayanti"],
+          ["Andika"],
+        ]
+      : [
+          ["Google", "US"],
+          ["Google", "American"],
+          ["Zira"],
+          ["David"],
+          ["Samantha"],
+          ["Karen"],
+        ];
 
-  // Try to find a preferred voice
-  for (const name of preferred) {
+  for (const keywords of nameKeywords) {
     const voice = voices.find(
-      (v) => v.name.includes(name) && v.lang.startsWith(lang === "id" ? "id" : "en")
+      (v) =>
+        normLang(v.lang).startsWith(langPrefix) &&
+        keywords.every((kw) => v.name.includes(kw)),
     );
     if (voice) return voice;
   }
 
-  // Fallback: any voice matching the language
-  const langMatch = voices.find((v) => v.lang.startsWith(lang === "id" ? "id" : "en"));
+  // 2. Fallback to first voice matching the language prefix
+  const langMatch = voices.find((v) => normLang(v.lang).startsWith(langPrefix));
   if (langMatch) return langMatch;
 
-  // Last resort: any voice at all
+  // 3. Last resort — any voice at all
   return voices[0] || null;
+}
+
+/**
+ * Try to populate voices synchronously (needed on some browsers where
+ * `getVoices()` returns an empty array on the first call).
+ * Returns `true` if voices are readily available.
+ */
+function populateVoices(): boolean {
+  if (!window.speechSynthesis) return false;
+  // Force voice list population (Chrome loads them on first access)
+  const voices = window.speechSynthesis.getVoices();
+  return voices && voices.length > 0;
 }
 
 export function useSpeech() {
   const [speaking, setSpeaking] = useState(false);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const voicesReadyRef = useRef(false);
-
-  // Ensure voices are loaded (browsers like Chrome load them async)
-  const ensureVoices = useCallback(() => {
-    if (voicesReadyRef.current) return;
-    if (window.speechSynthesis.getVoices().length > 0) {
-      voicesReadyRef.current = true;
-      return;
-    }
-    // Chrome fires 'voiceschanged' only once after the page first loads
-    window.speechSynthesis.addEventListener("voiceschanged", () => {
-      voicesReadyRef.current = true;
-    }, { once: true });
-  }, []);
+  const voicesLoadedRef = useRef(false);
 
   const speak = useCallback((text: string, lang: VoicePreference = "en") => {
     if (!window.speechSynthesis) return;
-    ensureVoices();
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
+    // Try to populate voices (synchronous attempt first)
+    if (!voicesLoadedRef.current) {
+      voicesLoadedRef.current = populateVoices();
+    }
+
+    // If still empty, register the async handler on first call only
+    if (!voicesLoadedRef.current) {
+      const handler = () => {
+        voicesLoadedRef.current = true;
+        window.speechSynthesis.removeEventListener("voiceschanged", handler);
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", handler);
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang === "id" ? "id-ID" : "en-US";
 
-    // Warm, friendly speech for kids — natural pace with a cheerful tone
-    utterance.rate = 1.1;
-    utterance.pitch = 1.15;
-    utterance.volume = 1.0;
+    // --- Per-language fun & natural speech settings ---
+    if (lang === "id") {
+      // Indonesian is more syllabic — natural pace with a friendly, cheerful lift
+      utterance.rate = 1.05;  // Slightly relaxed — easy to follow every syllable
+      utterance.pitch = 1.2;  // Bright and cheerful, like a friendly teacher
+      utterance.volume = 1.0;
+    } else {
+      // English — warm, bouncy, and engaging for kids
+      utterance.rate = 1.1;   // Lively but not rushed
+      utterance.pitch = 1.15; // Gentle cheerful lift
+      utterance.volume = 1.0;
+    }
 
-    // Try to select a natural-sounding voice
+    // Select a natural-sounding voice
     const bestVoice = findBestVoice(lang);
     if (bestVoice) {
       utterance.voice = bestVoice;
     }
 
+    // Keep a reference so the browser doesn't garbage-collect mid-speech
     utterRef.current = utterance;
+
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [ensureVoices]);
+  }, []);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
