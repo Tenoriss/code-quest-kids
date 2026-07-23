@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "react-router";
-import { Brain, Timer, Trophy, RotateCcw, Star, Sparkles } from "lucide-react";
+import { Brain, Timer, Trophy, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -35,8 +35,8 @@ interface LeaderboardEntry {
 
 export default function Quiz() {
   const { lang } = useLanguage();
-  const { state, addXP, addQuizScore, completeLesson } = useGame();
-  const [leaderboard, setLeaderboard] = useLocalStorage<LeaderboardEntry[]>("codequest_leaderboard", []);
+  const { addXP, addQuizScore, completeLesson } = useGame();
+  const [leaderboard] = useLocalStorage<LeaderboardEntry[]>("codequest_leaderboard", []);
 
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -89,17 +89,7 @@ export default function Quiz() {
     if (score === quizQuestions.length) fireConfetti(100);
   }, [score, addXP, addQuizScore, completeLesson]);
 
-  const saveToLeaderboard = () => {
-    if (!playerName.trim()) return;
-    const entry: LeaderboardEntry = {
-      name: playerName.trim(),
-      score,
-      total: quizQuestions.length,
-      time: 300 - timeLeft,
-      date: new Date().toISOString(),
-    };
-    setLeaderboard((prev) => [...prev, entry].sort((a, b) => b.score - a.score || a.time - b.time).slice(0, 10));
-  };
+
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);

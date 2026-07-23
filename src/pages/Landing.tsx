@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart, BookOpen, Award, Clock, Flame, Target, CheckCircle, Star, Zap, Medal } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart, BookOpen, Award, Clock, Flame, Target, CheckCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useGame } from "@/contexts/GameContext";
-import { Navbar } from "@/components/layout/Navbar";
 import { Byte } from "@/components/layout/Byte";
 import { fireConfetti } from "@/lib/confetti";
 
@@ -51,9 +50,6 @@ function PublicLanding() {
   const { decorationData } = useTheme();
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const [mascotMood, setMascotMood] = useState<"wave" | "happy" | "excited" | "celebrate">("wave");
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
 
@@ -365,7 +361,7 @@ function PublicLanding() {
 function StudentHome() {
   const { lang } = useLanguage();
   const { isAuthenticated, currentUserProfile } = useAuth();
-  const { state, achievements, getDailyMission, getWeeklyChallenge, completeDailyMission, completeWeeklyChallenge, resetGame } = useGame();
+  const { state, achievements, getDailyMission, getWeeklyChallenge, completeDailyMission, completeWeeklyChallenge } = useGame();
   const { decorationData } = useTheme();
   const { playClick, playAchievement } = useSound();
   const navigate = useNavigate();

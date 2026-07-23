@@ -126,7 +126,7 @@ export default function TeacherDashboard() {
             {tab==="overview"&&<Overview key="ov" an={an} students={students} lang={lang} />}
             {tab==="students"&&<Students key="st" students={filtered} q={q} setQ={setQ} sf={sf} sa={sa} tog={tog} gf={gf} setGf={setGf} sel={sel} setSel={setSel} sd={sd} setSd={setSd} lang={lang} />}
             {tab==="analytics"&&<Analytics key="an" an={an} students={students} lang={lang} />}
-            {tab==="attendance"&&<Attendance key="at" students={students} aw={aw} setAw={setAw} sel={sel} sd={ad} setSd={setAd} onSelect={(s:StudentData)=>{setSel(s);setAd(true)}} onClose={()=>setAd(false)} lang={lang} />}
+            {tab==="attendance"&&<Attendance key="at" students={students} aw={aw} setAw={setAw} sel={sel} sd={ad} onSelect={(s:StudentData)=>{setSel(s);setAd(true)}} onClose={()=>setAd(false)} lang={lang} />}
           </AnimatePresence>
         </div>
       </main>
@@ -363,8 +363,8 @@ function Analytics({an,students,lang}:{an:AnalyticsData;students:StudentData[];l
 }
 
 // ATTENDANCE
-function Attendance({students,aw,setAw,sel,sd,setSd,onSelect,onClose,lang}:{
-  students:StudentData[];aw:number;setAw:(w:number)=>void;sel:StudentData|null;sd:boolean;setSd:(v:boolean)=>void;
+function Attendance({students,aw,setAw,sel,sd,onSelect,onClose,lang}:{
+  students:StudentData[];aw:number;setAw:(w:number)=>void;sel:StudentData|null;sd:boolean;
   onSelect:(s:StudentData)=>void;onClose:()=>void;lang:"en"|"id";
 }) {
   const dates=Array.from({length:7},(_,i)=>new Date(2026,6,19+i).getDate());

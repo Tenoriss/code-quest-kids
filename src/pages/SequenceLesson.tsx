@@ -26,7 +26,7 @@ const definition = {
 export default function SequenceLesson() {
   const { lang } = useLanguage();
   const { state, addXP, completeLesson } = useGame();
-  const [animating, setAnimating] = useState(false);
+  const [, setAnimating] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [showComplete, setShowComplete] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(state.completedLessons.includes("sequence_lesson"));

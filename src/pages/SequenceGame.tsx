@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { Link } from "react-router";
 import { ArrowRight, RotateCcw, Star, Sparkles, ListOrdered } from "lucide-react";
@@ -28,7 +28,6 @@ export default function SequenceGame() {
   const [stars, setStars] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showHint, setShowHint] = useState(false);
 
   const checkOrder = useCallback(() => {

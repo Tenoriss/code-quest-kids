@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router";
-import { User, Camera, Save, RotateCcw, X, Star, Rocket, Bot, Trophy, Palette, Sparkles, Heart, ArrowLeft } from "lucide-react";
+import { User, Camera, Save, RotateCcw, X, Star, Sparkles, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";

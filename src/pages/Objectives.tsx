@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useRef } from "react";
 import { Link } from "react-router";
 import { ArrowRight, Target, ListOrdered, GitBranch, Search, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";

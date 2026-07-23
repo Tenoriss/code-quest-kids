@@ -29,8 +29,8 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export default function StudentDashboard() {
   const { lang } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { state, achievements, resetGame, claimDailyReward, addXP, addCoins, checkAchievements } = useGame();
-  const { playLevelUp, playAchievement, playConfetti: playConfettiSound } = useSound();
+  const { state, achievements, resetGame, claimDailyReward, checkAchievements } = useGame();
+  const { playAchievement, playConfetti: playConfettiSound } = useSound();
   const navigate = useNavigate();
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [dailyReward, setDailyReward] = useState<{ xp: number; coins: number; day: number } | null>(null);

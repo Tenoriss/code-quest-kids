@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "react-router";
-import { ArrowRight, RotateCcw, Sparkles, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGame } from "@/contexts/GameContext";

@@ -86,6 +86,7 @@ function Carousel({
     [scrollPrev, scrollNext]
   )
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => {
     if (!api || !setApi) return
     setApi(api)
