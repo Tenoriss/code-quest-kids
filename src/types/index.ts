@@ -24,6 +24,10 @@ export interface GameState {
   completedLessons: string[];
   achievements: string[];
   quizScores: { date: string; score: number; total: number }[];
+  learningTime: number;
+  currentLesson: string;
+  coins: number;
+  dailyRewardClaimed: string | null;
 }
 
 export interface Achievement {
@@ -45,7 +49,46 @@ export interface Student {
   lastActive: string;
 }
 
-export type ThemeMode = "light" | "dark" | "kids";
+export interface UserProfile {
+  fullName: string;
+  nickname: string;
+  email: string;
+  password: string;
+  birthday: string;
+  grade: string;
+  country: string;
+  avatarUrl: string;
+  favoriteColor: string;
+  favoriteCharacter: string;
+  bio: string;
+  avatarFrame: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  currentUser: string | null;
+  users: Record<string, UserProfile>;
+}
+
+export interface CollectionItem {
+  id: string;
+  name: string;
+  icon: string;
+  unlocked: boolean;
+  unlockedAt: string | null;
+  type: "badge" | "frame" | "theme" | "sticker" | "accessory";
+}
+
+export interface DailyReward {
+  day: number;
+  xp: number;
+  item: string;
+  icon: string;
+  claimed: boolean;
+}
+
+export type ThemeMode = "light" | "dark" | "kids" | "candy" | "space" | "ocean" | "rainbow";
+
 export type Language = "en" | "id";
 
 export interface DailyLifeExample {

@@ -1,8 +1,5 @@
 import '@vly-ai/integrations';
 import { Toaster } from "@/components/ui/sonner";
-import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
@@ -12,6 +9,8 @@ import "./index.css";
 import { GameProvider } from "@/contexts/GameContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SoundProvider } from "@/contexts/SoundContext";
 
 // Lazy load route components for better code splitting
 const Landing = lazy(() => import("./pages/Landing.tsx"));
@@ -29,32 +28,20 @@ const Quiz = lazy(() => import("./pages/Quiz.tsx"));
 const Certificate = lazy(() => import("./pages/Certificate.tsx"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard.tsx"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard.tsx"));
+const Profile = lazy(() => import("./pages/Profile.tsx"));
 
 // Simple loading fallback for route transitions
 function RouteLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <span className="text-2xl text-white font-bold">CQ</span>
+        </div>
+        <p className="text-sm text-gray-400">Loading...</p>
+      </div>
     </div>
   );
-}
-
-/** Silent error boundary — if VlyToolbar crashes it renders nothing instead of
- *  crashing the whole app (e.g. hook errors in WebContainer environment). */
-class ToolbarErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(err: Error) {
-    console.warn("[VlyToolbar] Caught error, toolbar disabled:", err.message);
-  }
-  render() {
-    return this.state.hasError ? null : this.props.children;
-  }
 }
 
 /** Hard guard so runtime errors never leave the preview as a blank page. */
@@ -95,8 +82,6 @@ class RootErrorBoundary extends React.Component<
   }
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
-
 function RouteSyncer() {
   const location = useLocation();
   useEffect(() => {
@@ -123,40 +108,40 @@ function RouteSyncer() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RootErrorBoundary>
-      <ToolbarErrorBoundary>
-        <VlyToolbar />
-      </ToolbarErrorBoundary>
-      <ConvexAuthProvider client={convex}>
+      <AuthProvider>
         <ThemeProvider>
           <LanguageProvider>
-            <GameProvider>
-              <BrowserRouter>
-                <RouteSyncer />
-                <Suspense fallback={<RouteLoading />}>
-                  <Routes>
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/auth" element={<AuthPage redirectAfterAuth="/" />} />
-                    <Route path="/objectives" element={<Objectives />} />
-                    <Route path="/sequence" element={<SequenceLesson />} />
-                    <Route path="/sequence-game" element={<SequenceGame />} />
-                    <Route path="/algorithm" element={<AlgorithmLesson />} />
-                    <Route path="/algorithm-game" element={<AlgorithmGame />} />
-                    <Route path="/why-important" element={<WhyImportant />} />
-                    <Route path="/daily-life" element={<DailyLife />} />
-                    <Route path="/practice" element={<Practice />} />
-                    <Route path="/quiz" element={<Quiz />} />
-                    <Route path="/certificate" element={<Certificate />} />
-                    <Route path="/dashboard" element={<StudentDashboard />} />
-                    <Route path="/teacher" element={<TeacherDashboard />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-              <Toaster />
-            </GameProvider>
+            <SoundProvider>
+              <GameProvider>
+                <BrowserRouter>
+                  <RouteSyncer />
+                  <Suspense fallback={<RouteLoading />}>
+                    <Routes>
+                      <Route path="/" element={<Landing />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/objectives" element={<Objectives />} />
+                      <Route path="/sequence" element={<SequenceLesson />} />
+                      <Route path="/sequence-game" element={<SequenceGame />} />
+                      <Route path="/algorithm" element={<AlgorithmLesson />} />
+                      <Route path="/algorithm-game" element={<AlgorithmGame />} />
+                      <Route path="/why-important" element={<WhyImportant />} />
+                      <Route path="/daily-life" element={<DailyLife />} />
+                      <Route path="/practice" element={<Practice />} />
+                      <Route path="/quiz" element={<Quiz />} />
+                      <Route path="/certificate" element={<Certificate />} />
+                      <Route path="/dashboard" element={<StudentDashboard />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/teacher" element={<TeacherDashboard />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+                <Toaster />
+              </GameProvider>
+            </SoundProvider>
           </LanguageProvider>
         </ThemeProvider>
-      </ConvexAuthProvider>
+      </AuthProvider>
     </RootErrorBoundary>
   </StrictMode>,
 );

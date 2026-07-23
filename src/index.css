@@ -1,7 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
 @custom-variant dark (&:is(.dark *));
 @custom-variant kids (&:is(.kids *));
+@custom-variant candy (&:is(.candy *));
+@custom-variant space (&:is(.space *));
+@custom-variant ocean (&:is(.ocean *));
+@custom-variant rainbow (&:is(.rainbow *));
 
 @theme inline {
   --font-heading: 'Poppins', sans-serif;
@@ -78,6 +83,7 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* ===== DARK THEME ===== */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -112,6 +118,7 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ===== KIDS THEME (Warm Amber) ===== */
 .kids {
   --radius: 1rem;
   --background: #fef3c7;
@@ -135,6 +142,150 @@
   --chart-3: #10b981;
   --chart-4: #f472b6;
   --chart-5: #8b5cf6;
+  --sidebar: #fffbeb;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fde68a;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #fde68a;
+  --sidebar-ring: #6366f1;
+}
+
+/* ===== CANDY THEME (Pink/Sweet) ===== */
+.candy {
+  --radius: 1.25rem;
+  --background: #fdf2f8;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --primary: #ec4899;
+  --primary-foreground: #ffffff;
+  --secondary: #fbcfe8;
+  --secondary-foreground: #831843;
+  --muted: #fce7f3;
+  --muted-foreground: #9d174d;
+  --accent: #f472b6;
+  --accent-foreground: #ffffff;
+  --border: #f9a8d4;
+  --input: #f9a8d4;
+  --ring: #ec4899;
+  --destructive: #ef4444;
+  --chart-1: #ec4899;
+  --chart-2: #f472b6;
+  --chart-3: #a78bfa;
+  --chart-4: #fbbf24;
+  --chart-5: #34d399;
+  --sidebar: #fdf2f8;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #ec4899;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fbcfe8;
+  --sidebar-accent-foreground: #831843;
+  --sidebar-border: #f9a8d4;
+  --sidebar-ring: #ec4899;
+}
+
+/* ===== SPACE THEME (Dark Blue/Purple) ===== */
+.space {
+  --radius: 0.75rem;
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --card: #1e293b;
+  --card-foreground: #e2e8f0;
+  --primary: #0ea5e9;
+  --primary-foreground: #ffffff;
+  --secondary: #1e3a5f;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #6366f1;
+  --accent-foreground: #ffffff;
+  --border: #334155;
+  --input: #334155;
+  --ring: #0ea5e9;
+  --destructive: #ef4444;
+  --chart-1: #0ea5e9;
+  --chart-2: #6366f1;
+  --chart-3: #8b5cf6;
+  --chart-4: #ec4899;
+  --chart-5: #f59e0b;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #0ea5e9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #334155;
+  --sidebar-ring: #0ea5e9;
+}
+
+/* ===== OCEAN THEME (Teal/Cyan) ===== */
+.ocean {
+  --radius: 1rem;
+  --background: #ecfeff;
+  --foreground: #164e63;
+  --card: #ffffff;
+  --card-foreground: #164e63;
+  --primary: #06b6d4;
+  --primary-foreground: #ffffff;
+  --secondary: #cffafe;
+  --secondary-foreground: #155e75;
+  --muted: #ccfbf1;
+  --muted-foreground: #0f766e;
+  --accent: #14b8a6;
+  --accent-foreground: #ffffff;
+  --border: #99f6e4;
+  --input: #99f6e4;
+  --ring: #06b6d4;
+  --destructive: #ef4444;
+  --chart-1: #06b6d4;
+  --chart-2: #14b8a6;
+  --chart-3: #0ea5e9;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
+  --sidebar: #ecfeff;
+  --sidebar-foreground: #164e63;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #cffafe;
+  --sidebar-accent-foreground: #155e75;
+  --sidebar-border: #99f6e4;
+  --sidebar-ring: #06b6d4;
+}
+
+/* ===== RAINBOW THEME (Vibrant Multicolor) ===== */
+.rainbow {
+  --radius: 1.25rem;
+  --background: #fff7ed;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --primary: #a855f7;
+  --primary-foreground: #ffffff;
+  --secondary: #fde68a;
+  --secondary-foreground: #1c1917;
+  --muted: #fef3c7;
+  --muted-foreground: #78716c;
+  --accent: #f43f5e;
+  --accent-foreground: #ffffff;
+  --border: #d8b4fe;
+  --input: #d8b4fe;
+  --ring: #a855f7;
+  --destructive: #ef4444;
+  --chart-1: #ef4444;
+  --chart-2: #f59e0b;
+  --chart-3: #10b981;
+  --chart-4: #3b82f6;
+  --chart-5: #8b5cf6;
+  --sidebar: #fff7ed;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #a855f7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fde68a;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #d8b4fe;
+  --sidebar-ring: #a855f7;
 }
 
 @layer base {
@@ -152,13 +303,75 @@
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
+
+  /* Smooth scrollbar for kids */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+  }
 }
 
 @layer utilities {
   .glass {
     @apply bg-white/70 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700/30;
   }
+  .glass-kids {
+    @apply bg-amber-50/70 backdrop-blur-md border border-amber-200/30;
+  }
   .text-gradient {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
   }
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent;
+  }
+  .text-gradient-pink {
+    @apply bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent;
+  }
+  .text-gradient-rainbow {
+    @apply bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent;
+  }
+
+  /* Animation utilities */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  .animate-wiggle {
+    animation: wiggle 0.5s ease-in-out infinite;
+  }
+  .animate-bounce-sm {
+    animation: bounce-sm 2s ease-in-out infinite;
+  }
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes bounce-sm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

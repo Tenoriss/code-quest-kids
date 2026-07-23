@@ -11,6 +11,10 @@ const INITIAL_STATE: GameState = {
   completedLessons: [],
   achievements: [],
   quizScores: [],
+  learningTime: 0,
+  currentLesson: "",
+  coins: 0,
+  dailyRewardClaimed: null,
 };
 
 const XP_PER_LEVEL = 100;
@@ -22,20 +26,35 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: "ten_streak", title: "On Fire!", description: "10-day learning streak", icon: "🔥", unlocked: false },
   { id: "sequence_master", title: "Sequence Master", description: "Complete the sequence game", icon: "⭐", unlocked: false },
   { id: "algorithm_whiz", title: "Algorithm Whiz", description: "Complete the algorithm game", icon: "💡", unlocked: false },
+  { id: "collector", title: "Collector", description: "Complete all lessons", icon: "🏅", unlocked: false },
+  { id: "speed_demon", title: "Speed Demon", description: "Complete the quiz in under 2 minutes", icon: "⚡", unlocked: false },
 ];
 
 interface GameContextType {
   state: GameState;
   addXP: (amount: number) => void;
+  addCoins: (amount: number) => void;
   loseHeart: () => void;
+  restoreHearts: () => void;
   completeLesson: (lessonId: string) => void;
   addQuizScore: (score: number, total: number) => void;
+  addLearningTime: (minutes: number) => void;
+  setCurrentLesson: (lessonId: string) => void;
+  claimDailyReward: () => { xp: number; coins: number; day: number } | null;
   checkAchievements: () => string[];
   achievements: Achievement[];
   resetGame: () => void;
+  hasCompleted: (lessonId: string) => boolean;
+  completionPercent: number;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
+
+const LESSONS = [
+  "sequence_lesson", "sequence_game",
+  "algorithm_lesson", "algorithm_game",
+  "practice", "quiz",
+];
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useLocalStorage<GameState>("codequest_game", INITIAL_STATE);
@@ -51,8 +70,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [setState]
   );
 
+  const addCoins = useCallback(
+    (amount: number) => {
+      setState((prev) => ({ ...prev, coins: prev.coins + amount }));
+    },
+    [setState]
+  );
+
   const loseHeart = useCallback(() => {
     setState((prev) => ({ ...prev, hearts: Math.max(0, prev.hearts - 1) }));
+  }, [setState]);
+
+  const restoreHearts = useCallback(() => {
+    setState((prev) => ({ ...prev, hearts: 5 }));
   }, [setState]);
 
   const completeLesson = useCallback(
@@ -80,6 +110,40 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [setState]
   );
 
+  const addLearningTime = useCallback(
+    (minutes: number) => {
+      setState((prev) => ({ ...prev, learningTime: prev.learningTime + minutes }));
+    },
+    [setState]
+  );
+
+  const setCurrentLesson = useCallback(
+    (lessonId: string) => {
+      setState((prev) => ({ ...prev, currentLesson: lessonId }));
+    },
+    [setState]
+  );
+
+  const claimDailyReward = useCallback(() => {
+    const today = new Date().toDateString();
+    if (state.dailyRewardClaimed === today) return null;
+
+    // Calculate streak day
+    let day = 1;
+    if (state.streak > 0) {
+      day = Math.min(state.streak + 1, 7);
+    }
+
+    const xpReward = day * 10;
+    const coinReward = day * 5;
+
+    addXP(xpReward);
+    addCoins(coinReward);
+    setState((prev) => ({ ...prev, dailyRewardClaimed: today }));
+
+    return { xp: xpReward, coins: coinReward, day };
+  }, [state.dailyRewardClaimed, state.streak, addXP, addCoins, setState]);
+
   const checkAchievements = useCallback((): string[] => {
     const unlocked: string[] = [];
     const newAchievements = [...state.achievements];
@@ -92,6 +156,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       newAchievements.push("five_lessons");
       unlocked.push("five_lessons");
     }
+    if (state.completedLessons.length >= 6 && !newAchievements.includes("collector")) {
+      newAchievements.push("collector");
+      unlocked.push("collector");
+    }
     if (
       state.quizScores.some((q) => q.score === q.total) &&
       !newAchievements.includes("perfect_quiz")
@@ -102,6 +170,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (state.streak >= 10 && !newAchievements.includes("ten_streak")) {
       newAchievements.push("ten_streak");
       unlocked.push("ten_streak");
+    }
+    if (state.completedLessons.includes("sequence_game") && !newAchievements.includes("sequence_master")) {
+      newAchievements.push("sequence_master");
+      unlocked.push("sequence_master");
+    }
+    if (state.completedLessons.includes("algorithm_game") && !newAchievements.includes("algorithm_whiz")) {
+      newAchievements.push("algorithm_whiz");
+      unlocked.push("algorithm_whiz");
     }
 
     if (unlocked.length > 0) {
@@ -115,17 +191,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(INITIAL_STATE);
   }, [setState]);
 
+  const hasCompleted = useCallback(
+    (lessonId: string) => state.completedLessons.includes(lessonId),
+    [state.completedLessons]
+  );
+
+  const completionPercent = Math.round((state.completedLessons.length / LESSONS.length) * 100);
+
   return (
     <GameContext.Provider
       value={{
         state,
         addXP,
+        addCoins,
         loseHeart,
+        restoreHearts,
         completeLesson,
         addQuizScore,
+        addLearningTime,
+        setCurrentLesson,
+        claimDailyReward,
         checkAchievements,
         achievements: ACHIEVEMENTS,
         resetGame,
+        hasCompleted,
+        completionPercent,
       }}
     >
       {children}
