@@ -121,6 +121,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   const musicCtxRef = useRef<AudioContext | null>(null);
   const musicTimeoutRef = useRef<number | null>(null);
   const noteIndexRef = useRef(0);
+  const playMusicNoteRef = useRef<((ctx: AudioContext, index: number) => void) | null>(null);
 
   const stopMusic = useCallback(() => {
     if (musicTimeoutRef.current !== null) {
@@ -134,12 +135,14 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     noteIndexRef.current = 0;
   }, []);
 
-  const playMusicNote = useCallback((ctx: AudioContext, index: number) => {
+  const scheduleNextNote = useCallback((ctx: AudioContext, index: number) => {
     if (index >= MELODY_NOTES.length) {
       // Loop back to start
       noteIndexRef.current = 0;
       musicTimeoutRef.current = window.setTimeout(() => {
-        if (musicCtxRef.current) playMusicNote(musicCtxRef.current, 0);
+        if (musicCtxRef.current && playMusicNoteRef.current) {
+          playMusicNoteRef.current(musicCtxRef.current, 0);
+        }
       }, 400);
       return;
     }
@@ -163,9 +166,15 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     // Schedule next note
     const gap = index % 4 === 3 ? 250 : 180; // Slightly longer after every 4th note (phrase break)
     musicTimeoutRef.current = window.setTimeout(() => {
-      if (musicCtxRef.current) playMusicNote(musicCtxRef.current, noteIndexRef.current);
+      if (musicCtxRef.current && playMusicNoteRef.current) {
+        playMusicNoteRef.current(musicCtxRef.current, noteIndexRef.current);
+      }
     }, gap);
   }, []);
+
+  useEffect(() => {
+    playMusicNoteRef.current = scheduleNextNote;
+  }, [scheduleNextNote]);
 
   const startMusic = useCallback(() => {
     stopMusic();
@@ -173,11 +182,11 @@ export function SoundProvider({ children }: { children: ReactNode }) {
       const ctx = new AudioContext();
       musicCtxRef.current = ctx;
       noteIndexRef.current = 0;
-      playMusicNote(ctx, 0);
+      scheduleNextNote(ctx, 0);
     } catch {
       // Audio not available
     }
-  }, [stopMusic, playMusicNote]);
+  }, [stopMusic, scheduleNextNote]);
 
   // Start/stop music based on isMusicPlaying
   useEffect(() => {
