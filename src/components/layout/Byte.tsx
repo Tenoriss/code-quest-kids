@@ -123,8 +123,8 @@ export function Byte({
   useEffect(() => {
     if (currentMessage && currentMessage !== prevMessageRef.current) {
       prevMessageRef.current = currentMessage;
-      playNotification();
       if (!noVoice) {
+        playNotification();
         speak(currentMessage, lang);
       }
     }
