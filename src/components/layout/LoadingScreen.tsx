@@ -287,18 +287,42 @@ export default function LoadingScreen() {
   const currentMessage = LOADING_MESSAGES[messageIndex];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 will-change-transform">
-      {/* ─── Smooth animated background orbs ─────────────────────── */}
-      <motion.div
-        className="absolute top-1/5 left-1/4 w-[30rem] h-[30rem] rounded-full bg-pink-400/10 blur-3xl will-change-transform"
-        animate={{ scale: [1, 1.5, 1], x: [0, 50, 0], y: [0, -50, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden will-change-transform">
+      {/* ─── Night sky background ───────────────────────────────── */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80')",
+        }}
       />
-      <motion.div
-        className="absolute bottom-1/4 right-1/5 w-[35rem] h-[35rem] rounded-full bg-yellow-300/8 blur-3xl will-change-transform"
-        animate={{ scale: [1, 1.6, 1], x: [0, -60, 0], y: [0, 60, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-      />
+      {/* Dark overlay for better visibility of logo and text */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* ─── Twinkling stars overlay ─────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 30 }, (_, i) => (
+          <motion.div
+            key={`star-${i}`}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${2 + Math.random() * 3}px`,
+              height: `${2 + Math.random() * 3}px`,
+            }}
+            animate={{
+              opacity: [0.2, 0.9, 0.2],
+              scale: [0.5, 1.3, 0.5],
+            }}
+            transition={{
+              duration: 1.5 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
 
       {/* ─── Floating emoji particles (smoother paths) ─────────────── */}
       <div className="absolute inset-0 pointer-events-none">
