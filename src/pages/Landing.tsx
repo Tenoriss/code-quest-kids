@@ -46,6 +46,7 @@ const lessons = [
 
 function PublicLanding() {
   const { t, lang } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const { playClick } = useSound();
   const { decorationData } = useTheme();
   const navigate = useNavigate();
@@ -191,16 +192,22 @@ function PublicLanding() {
               {lang === "en" ? "Get Started Free" : "Mulai Gratis"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            <Link to="/quiz">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 px-8 text-base rounded-full border-2 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
-              >
-                <Brain className="w-5 h-5 mr-2" />
-                {t("take.quiz")}
-              </Button>
-            </Link>
+            <Button
+              onClick={() => {
+                playClick();
+                if (isAuthenticated) {
+                  navigate("/quiz");
+                } else {
+                  navigate("/auth?returnTo=/quiz");
+                }
+              }}
+              size="lg"
+              variant="outline"
+              className="h-14 px-8 text-base rounded-full border-2 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
+            >
+              <Brain className="w-5 h-5 mr-2" />
+              {t("take.quiz")}
+            </Button>
           </motion.div>
 
           {/* Stats Row */}
