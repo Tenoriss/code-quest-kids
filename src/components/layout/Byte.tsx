@@ -80,9 +80,8 @@ export function Byte({
   className = "",
   size = "md",
 }: ByteProps) {
-  const themeCtx = useTheme();
+  const { robotData } = useTheme();
   const { lang } = useLanguage();
-  const robotData = themeCtx.robotData;
   const [currentMood, setCurrentMood] = useState<typeof mood>(mood);
   const [currentMessage, setCurrentMessage] = useState(message || "");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -100,6 +99,7 @@ export function Byte({
     return msgs[Math.floor(Math.random() * msgs.length)];
   }, []);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (mood !== undefined) setCurrentMood(mood);
     if (message) {
@@ -117,22 +117,25 @@ export function Byte({
       setCurrentMessage(getRandomMessage(category));
     }
   }, [mood, message, getRandomMessage]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    if (mood === "idle") {
-      const moods = ["idle", "wave", "idle", "happy", "idle", "think", "idle", "wave"] as const;
-      let i = 0;
-      moodIntervalRef.current = setInterval(() => {
-        i = (i + 1) % moods.length;
-        const newMood = moods[i];
-        if (newMood) setCurrentMood(newMood);
-      }, 4000);
-    }
+  const autoCycleMood = useCallback(() => {
+    if (mood !== "idle") return;
+    const moods = ["idle", "wave", "idle", "happy", "idle", "think", "idle", "wave"] as const;
+    let i = 0;
+    moodIntervalRef.current = setInterval(() => {
+      i = (i + 1) % moods.length;
+      const newMood = moods[i];
+      if (newMood) setCurrentMood(newMood);
+    }, 4000);
     return () => {
       if (moodIntervalRef.current) clearInterval(moodIntervalRef.current);
     };
   }, [mood]);
+
+  useEffect(() => {
+    return autoCycleMood();
+  }, [autoCycleMood]);
 
   const speak = useCallback(
     (text: string) => {

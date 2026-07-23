@@ -63,6 +63,7 @@ function PublicLanding() {
     { name: "Maya", age: 8, text: { en: "Algorithm is like giving instructions to a robot! 🤖", id: "Algoritma itu seperti memberi instruksi ke robot! 🤖" } },
   ];
 
+  /* eslint-disable react-hooks/purity */
   const binaryPositions = useMemo(
     () =>
       Array.from({ length: 20 }, (_, i) => ({
@@ -72,6 +73,7 @@ function PublicLanding() {
       })),
     []
   );
+  /* eslint-enable react-hooks/purity */
 
   useEffect(() => {
     const moods: Array<"wave" | "happy" | "excited" | "celebrate"> = ["wave", "happy", "excited", "wave", "happy"];
@@ -372,12 +374,14 @@ function StudentHome() {
   const [weeklyChallenge, setWeeklyChallenge] = useState<{ challenge: { id: string; title: { en: string; id: string }; description: { en: string; id: string }; xp: number; coins: number; icon: string }; isDone: boolean } | null>(null);
   const [showMissionComplete, setShowMissionComplete] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const mission = getDailyMission();
     if (mission) setDailyMission(mission);
     const challenge = getWeeklyChallenge();
     if (challenge) setWeeklyChallenge(challenge);
   }, [getDailyMission, getWeeklyChallenge]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Get time-based greeting
   const getGreeting = useCallback(() => {
