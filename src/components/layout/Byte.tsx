@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useSpeech } from "@/hooks/use-speech";
 
 interface ByteProps {
   mood?: "idle" | "wave" | "happy" | "celebrate" | "think" | "sad" | "excited";
@@ -82,10 +83,12 @@ export function Byte({
   const { robotData } = useTheme();
   const { lang } = useLanguage();
   const { playNotification } = useSound();
+  const { speak, stop, speaking } = useSpeech();
   const [currentMood, setCurrentMood] = useState<typeof mood>(mood);
   const [currentMessage, setCurrentMessage] = useState(message || "");
   const [showHint, setShowHint] = useState(false);
   const moodIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevMessageRef = useRef<string>("");
 
   const sz = SIZE_MAP[size];
 
@@ -113,12 +116,14 @@ export function Byte({
     }
   }, [mood, message, getRandomMessage]);
 
-  /* Play a gentle notification pop when a new message appears (not voice/TTS) */
+  /* Play a gentle notification pop and speak the message when a new message appears */
   useEffect(() => {
-    if (currentMessage) {
+    if (currentMessage && currentMessage !== prevMessageRef.current) {
+      prevMessageRef.current = currentMessage;
       playNotification();
+      speak(currentMessage, lang);
     }
-  }, [currentMessage, playNotification]);
+  }, [currentMessage, playNotification, speak, lang]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const autoCycleMood = useCallback(() => {
@@ -236,6 +241,34 @@ export function Byte({
                   💡 {hint}
                 </motion.p>
               )}
+
+              {/* Listen / Stop button */}
+              <button
+                onClick={() => {
+                  if (speaking) {
+                    stop();
+                  } else {
+                    speak(currentMessage, lang);
+                  }
+                }}
+                className={`mt-2 flex items-center gap-1 text-xs transition-colors ${
+                  speaking
+                    ? "text-purple-500 dark:text-purple-300"
+                    : "text-gray-400 hover:text-purple-500 dark:hover:text-purple-300"
+                }`}
+              >
+                {speaking ? (
+                  <>
+                    <VolumeX className="w-3 h-3" />
+                    {lang === "en" ? "Stop" : "Berhenti"}
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3 h-3" />
+                    {lang === "en" ? "Listen" : "Dengar"}
+                  </>
+                )}
+              </button>
             </div>
             {/* Speech bubble arrow */}
             <div className={`absolute -left-1 bottom-3 w-2 h-2 ${robotData.bubbleBg} border-l border-b ${robotData.bubbleBorder} -rotate-45 transition-all duration-500`} />
