@@ -12,6 +12,8 @@ interface ByteProps {
   hint?: string;
   className?: string;
   size?: "sm" | "md" | "lg";
+  /** If true, the chat bubble shows but no voice plays. */
+  noVoice?: boolean;
 }
 
 const MOOD_ANIMATIONS = {
@@ -79,6 +81,7 @@ export function Byte({
   hint,
   className = "",
   size = "md",
+  noVoice = false,
 }: ByteProps) {
   const { robotData } = useTheme();
   const { lang } = useLanguage();
@@ -121,9 +124,11 @@ export function Byte({
     if (currentMessage && currentMessage !== prevMessageRef.current) {
       prevMessageRef.current = currentMessage;
       playNotification();
-      speak(currentMessage, lang);
+      if (!noVoice) {
+        speak(currentMessage, lang);
+      }
     }
-  }, [currentMessage, playNotification, speak, lang]);
+  }, [currentMessage, playNotification, speak, lang, noVoice]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const autoCycleMood = useCallback(() => {

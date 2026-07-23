@@ -147,7 +147,7 @@ function PublicLanding() {
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="mb-6 inline-block"
           >
-            <Byte mood={mascotMood} size="lg" />
+            <Byte mood={mascotMood} size="lg" noVoice />
           </motion.div>
 
           <motion.h1
