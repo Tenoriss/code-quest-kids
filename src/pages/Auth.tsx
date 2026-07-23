@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router";
-import { Sparkles, Mail, Lock, User, Calendar, MapPin, GraduationCap, Eye, EyeOff, ArrowRight, Code, Smartphone, Star, Rocket } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Calendar, MapPin, GraduationCap, Eye, EyeOff, ArrowRight, Code, Smartphone, Star, Rocket, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Byte } from "@/components/layout/Byte";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, signUp, login } = useAuth();
+  const { isAuthenticated, signUp, login, teacherLogin } = useAuth();
   const { resetGame } = useGame();
   const [mode, setMode] = useState<"login" | "signup">("signup");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +18,10 @@ export default function AuthPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [byteMood, setByteMood] = useState<"wave" | "happy" | "think">("wave");
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [teacherLoading, setTeacherLoading] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState("");
 
   const [form, setForm] = useState({
     fullName: "",
@@ -41,26 +45,38 @@ export default function AuthPage() {
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
     // Validation
     if (!form.fullName || !form.nickname || !form.email || !form.password || !form.birthday || !form.grade) {
       setError("Please fill in all required fields!");
-      setLoading(false);
       return;
     }
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters!");
-      setLoading(false);
       return;
     }
     if (form.password !== form.confirmPassword) {
       setError("Passwords don't match!");
-      setLoading(false);
       return;
     }
 
+    // Generate a mock verification code and show verification step
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(code);
+    setVerificationStep(true);
+    setByteMood("think");
+  };
+
+  const handleVerifyOtp = () => {
+    const enteredCode = otp.join("");
+    if (enteredCode !== generatedOtp) {
+      setError("Incorrect verification code! Please try again.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
     const result = signUp({
       fullName: form.fullName,
       nickname: form.nickname,
@@ -77,15 +93,51 @@ export default function AuthPage() {
     });
 
     if (result.success) {
-      resetGame(); // Fresh dashboard
-      setSuccess("Account created! Welcome!");
+      resetGame();
+      setSuccess("Email verified! Account created! 🎉");
       setByteMood("happy");
-      setTimeout(() => navigate("/dashboard"), 500);
+      setTimeout(() => navigate("/dashboard"), 800);
     } else {
       setError(result.error || "Something went wrong!");
       setByteMood("think");
     }
     setLoading(false);
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) return; // Only single digit
+    if (value && !/^\d$/.test(value)) return; // Only digits
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleTeacherLogin = () => {
+    setTeacherLoading(true);
+    setError("");
+    const result = teacherLogin();
+    if (result.success) {
+      setSuccess("Welcome, Teacher! 👩‍🏫");
+      setByteMood("happy");
+      setTimeout(() => navigate("/teacher"), 500);
+    } else {
+      setError(result.error || "Something went wrong!");
+    }
+    setTeacherLoading(false);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -239,7 +291,97 @@ export default function AuthPage() {
                   <Byte mood={byteMood} />
                 </div>
 
-                <AnimatePresence mode="wait">
+                {verificationStep ? (
+                <motion.div
+                  key="verify"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6"
+                >
+                  <div className="text-center">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg"
+                    >
+                      <ShieldCheck className="w-8 h-8 text-white" />
+                    </motion.div>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
+                      Verify Your Email
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      We sent a verification code to <strong className="text-gray-700 dark:text-gray-200">{form.email}</strong>
+                    </p>
+                  </div>
+
+                  {/* OTP Input */}
+                  <div className="flex justify-center gap-2">
+                    {otp.map((digit, i) => (
+                      <input
+                        key={i}
+                        id={`otp-${i}`}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(i, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                        className="w-12 h-14 text-center text-xl font-bold rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                      />
+                    ))}
+                  </div>
+
+                  {/* Demo OTP hint */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center"
+                  >
+                    <p className="text-xs text-gray-400">
+                      📧 Demo mode — Your code is: <span className="font-mono font-bold text-green-600 dark:text-green-400">{generatedOtp}</span>
+                    </p>
+                  </motion.div>
+
+                  {error && (
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl text-center">
+                      {error}
+                    </motion.p>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => { setVerificationStep(false); setOtp(["", "", "", "", "", ""]); setError(""); }}
+                      variant="outline"
+                      className="flex-1 rounded-full h-12 text-sm"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleVerifyOtp}
+                      disabled={loading || otp.join("").length !== 6}
+                      className={`flex-1 rounded-full h-12 text-sm ${
+                        otp.join("").length === 6
+                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg"
+                          : "bg-gray-300 text-gray-500"
+                      }`}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                          Verifying...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Verify & Create Account
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+              <AnimatePresence mode="wait">
                   {mode === "signup" ? (
                     <motion.form
                       key="signup"
@@ -512,9 +654,40 @@ export default function AuthPage() {
                           </span>
                         )}
                       </Button>
+
+                      {/* Teacher Demo Login */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-200 dark:border-gray-600" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-white dark:bg-gray-800 px-3 text-gray-400">
+                            {mode === "login" ? "or" : "or"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleTeacherLogin}
+                        disabled={teacherLoading}
+                        variant="outline"
+                        className="w-full rounded-full border-2 border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 h-12 text-sm"
+                      >
+                        {teacherLoading ? (
+                          <span className="flex items-center gap-2">
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full" />
+                            Loading...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            👩‍🏫 Teacher Demo Login
+                          </span>
+                        )}
+                      </Button>
                     </motion.form>
                   )}
                 </AnimatePresence>
+              )}
 
                 <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
                   <p className="text-xs text-gray-400">

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSound } from "@/contexts/SoundContext";
 
 interface ByteProps {
   mood?: "idle" | "wave" | "happy" | "celebrate" | "think" | "sad" | "excited";
@@ -80,6 +81,7 @@ export function Byte({
 }: ByteProps) {
   const { robotData } = useTheme();
   const { lang } = useLanguage();
+  const { playNotification } = useSound();
   const [currentMood, setCurrentMood] = useState<typeof mood>(mood);
   const [currentMessage, setCurrentMessage] = useState(message || "");
   const [showHint, setShowHint] = useState(false);
@@ -110,6 +112,13 @@ export function Byte({
       setCurrentMessage(getRandomMessage(category));
     }
   }, [mood, message, getRandomMessage]);
+
+  /* Play a gentle notification pop when a new message appears (not voice/TTS) */
+  useEffect(() => {
+    if (currentMessage) {
+      playNotification();
+    }
+  }, [currentMessage, playNotification]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const autoCycleMood = useCallback(() => {

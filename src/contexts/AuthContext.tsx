@@ -6,6 +6,7 @@ interface AuthContextType {
   authState: AuthState;
   signUp: (profile: UserProfile) => { success: boolean; error?: string };
   login: (email: string, password: string) => { success: boolean; error?: string };
+  teacherLogin: () => { success: boolean; error?: string };
   logout: () => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
   isAuthenticated: boolean;
@@ -72,6 +73,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [authState.users, setAuthState]
   );
 
+  const teacherLogin = useCallback((): { success: boolean; error?: string } => {
+    const teacherEmail = "teacher@codequest.app";
+    const teacherPassword = "teacher123";
+
+    // Create teacher account if not exists
+    if (!authState.users[teacherEmail]) {
+      setAuthState((prev) => ({
+        ...prev,
+        users: {
+          ...prev.users,
+          [teacherEmail]: {
+            fullName: "Ms. Johnson",
+            nickname: "Teacher",
+            email: teacherEmail,
+            password: teacherPassword,
+            role: "teacher" as const,
+            birthday: "",
+            grade: "",
+            country: "",
+            avatarUrl: "",
+            avatarFrame: "default",
+            favoriteColor: "#10b981",
+            favoriteCharacter: "Byte",
+            bio: "Computer Science Teacher",
+          },
+        },
+      }));
+    }
+
+    // Login
+    setAuthState((prev) => ({
+      ...prev,
+      isAuthenticated: true,
+      currentUser: teacherEmail,
+    }));
+
+    return { success: true };
+  }, [authState.users, setAuthState]);
+
   const logout = useCallback(() => {
     setAuthState((prev) => ({
       ...prev,
@@ -108,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authState,
         signUp,
         login,
+        teacherLogin,
         logout,
         updateProfile,
         isAuthenticated: authState.isAuthenticated,

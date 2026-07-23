@@ -8,6 +8,7 @@ interface SoundContextType {
   toggleMusic: () => void;
   playClick: () => void;
   playHover: () => void;
+  playNotification: () => void;
   playCorrect: () => void;
   playWrong: () => void;
   playAchievement: () => void;
@@ -63,6 +64,10 @@ function playSound(name: string) {
   try {
     const ctx = new AudioContext();
     switch (name) {
+      case "notification":
+        createOscillator(ctx, 880, 0.06, "sine", 0.06);
+        setTimeout(() => createOscillator(ctx, 1100, 0.08, "sine", 0.05), 60);
+        break;
       case "click":
         createOscillator(ctx, 800, 0.08, "square", 0.08);
         break;
@@ -194,6 +199,10 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     setIsMusicPlaying((prev) => !prev);
   }, [setIsMusicPlaying]);
 
+  const playNotification = useCallback(() => {
+    if (!isMuted) playSound("notification");
+  }, [isMuted]);
+
   const playClick = useCallback(() => {
     if (!isMuted) playSound("click");
   }, [isMuted]);
@@ -224,7 +233,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
   return (
     <SoundContext.Provider
-      value={{ isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover, playCorrect, playWrong, playAchievement, playLevelUp, playConfetti }}
+      value={{ isMuted, toggleMute, isMusicPlaying, toggleMusic, playClick, playHover, playNotification, playCorrect, playWrong, playAchievement, playLevelUp, playConfetti }}
     >
       {children}
     </SoundContext.Provider>

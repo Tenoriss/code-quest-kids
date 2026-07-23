@@ -43,7 +43,6 @@ export function Footer() {
             <h4 className="font-semibold text-sm mb-3 text-gray-800 dark:text-gray-200">More</h4>
             <ul className="space-y-2">
               <li><Link to="/dashboard" className="text-xs text-gray-500 hover:text-blue-500 transition-colors">Student Dashboard</Link></li>
-              <li><Link to="/teacher" className="text-xs text-gray-500 hover:text-blue-500 transition-colors">Teacher Dashboard</Link></li>
               <li><Link to="/certificate" className="text-xs text-gray-500 hover:text-blue-500 transition-colors">Certificate</Link></li>
             </ul>
           </div>
