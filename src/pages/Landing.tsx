@@ -1,38 +1,22 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart } from "lucide-react";
+import { ArrowRight, Sparkles, Brain, ListOrdered, GitBranch, Trophy, Rocket, ChevronDown, Heart, BookOpen, Award, Clock, Flame, Target, CheckCircle, Star, Zap, Medal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useGame } from "@/contexts/GameContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Byte } from "@/components/layout/Byte";
 import { fireConfetti } from "@/lib/confetti";
 
-const floatingDecorations = [
-  { emoji: "⭐", x: "5%", y: "15%", size: 24, delay: 0 },
-  { emoji: "🚀", x: "90%", y: "10%", size: 28, delay: 0.5 },
-  { emoji: "🌈", x: "80%", y: "80%", size: 22, delay: 1 },
-  { emoji: "💻", x: "10%", y: "70%", size: 20, delay: 1.5 },
-  { emoji: "🧩", x: "95%", y: "50%", size: 18, delay: 0.8 },
-  { emoji: "🎨", x: "15%", y: "40%", size: 20, delay: 1.2 },
-  { emoji: "🎵", x: "85%", y: "30%", size: 16, delay: 0.3 },
-  { emoji: "🎮", x: "3%", y: "85%", size: 22, delay: 0.7 },
-  { emoji: "📚", x: "70%", y: "5%", size: 18, delay: 1.1 },
-  { emoji: "✨", x: "50%", y: "90%", size: 14, delay: 0.4 },
-];
-
-const floatingCode = [
-  { text: "<html>", x: "20%", y: "25%", delay: 0, size: 12 },
-  { text: "</div>", x: "75%", y: "60%", delay: 0.8, size: 10 },
-  { text: "{}", x: "8%", y: "55%", delay: 1.5, size: 16 },
-  { text: "if()", x: "92%", y: "40%", delay: 0.3, size: 12 },
-  { text: "0101", x: "82%", y: "20%", delay: 1.2, size: 10 },
-  { text: "def", x: "25%", y: "80%", delay: 0.6, size: 12 },
-  { text: "npm", x: "68%", y: "88%", delay: 1.8, size: 10 },
-  { text: "print", x: "35%", y: "10%", delay: 2, size: 11 },
-];
+// ============================================================
+// DATA
+// ============================================================
 
 const features = [
   { icon: ListOrdered, title: { en: "Learn Sequences", id: "Belajar Urutan" }, desc: { en: "Understand the correct order of steps to complete any task!", id: "Pahami urutan langkah yang benar untuk menyelesaikan tugas!" }, color: "from-blue-400 to-cyan-500" },
@@ -48,10 +32,23 @@ const stats = [
   { number: "🎯", label: { en: "Beginner Friendly", id: "Ramah Pemula" } },
 ];
 
-export default function Landing() {
+const lessons = [
+  { id: "sequence_lesson", title: { en: "What is Sequence?", id: "Apa itu Urutan?" }, icon: "📋", xp: 20, time: 10 },
+  { id: "sequence_game", title: { en: "Sequence Game", id: "Game Urutan" }, icon: "🎮", xp: 30, time: 15 },
+  { id: "algorithm_lesson", title: { en: "What is Algorithm?", id: "Apa itu Algoritma?" }, icon: "💡", xp: 20, time: 10 },
+  { id: "algorithm_game", title: { en: "Algorithm Game", id: "Game Algoritma" }, icon: "🎯", xp: 30, time: 15 },
+  { id: "practice", title: { en: "Practice", id: "Latihan" }, icon: "✏️", xp: 25, time: 10 },
+  { id: "quiz", title: { en: "Quiz", id: "Kuis" }, icon: "🧠", xp: 50, time: 20 },
+];
+
+// ============================================================
+// PUBLIC LANDING — Guest Marketing Page
+// ============================================================
+
+function PublicLanding() {
   const { t, lang } = useLanguage();
-  const { isAuthenticated } = useAuth();
   const { playClick } = useSound();
+  const { decorationData } = useTheme();
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
@@ -60,7 +57,12 @@ export default function Landing() {
   const [mascotMood, setMascotMood] = useState<"wave" | "happy" | "excited" | "celebrate">("wave");
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
 
-  // Stable random values for binary animation — computed once, not on every render
+  const guests = [
+    { name: "Sarah", age: 9, text: { en: "I love learning with Byte! The games are so fun! ⭐", id: "Aku suka belajar dengan Byte! Game-nya sangat seru! ⭐" } },
+    { name: "Alex", age: 11, text: { en: "Now I understand how to make my own sequences! 🚀", id: "Sekarang aku mengerti cara membuat urutanku sendiri! 🚀" } },
+    { name: "Maya", age: 8, text: { en: "Algorithm is like giving instructions to a robot! 🤖", id: "Algoritma itu seperti memberi instruksi ke robot! 🤖" } },
+  ];
+
   const binaryPositions = useMemo(
     () =>
       Array.from({ length: 20 }, (_, i) => ({
@@ -89,24 +91,17 @@ export default function Landing() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const handleStartLearning = () => {
-    playClick();
-    if (isAuthenticated) navigate("/sequence");
-    else navigate("/auth");
-  };
+  const floatingDecorations = decorationData.floatingEmojis.map((emoji, i) => (
+    { emoji, x: `${5 + (i * 13) % 90}%`, y: `${10 + (i * 17) % 80}%`, delay: i * 0.3 }
+  ));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 via-purple-50/20 to-pink-50/20 dark:from-gray-950 dark:via-blue-950/10 dark:via-purple-950/5 dark:to-pink-950/10 overflow-hidden">
-      <Navbar />
-
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
         {/* Animated Background */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Gradient Mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/40 via-transparent to-purple-100/30 dark:from-blue-900/20 dark:via-transparent dark:to-purple-900/20" />
-
-          {/* Glow orbs */}
+          <div className={`absolute inset-0 ${decorationData.bgClass} transition-all duration-700`} />
           <motion.div
             className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/15 rounded-full blur-3xl"
             animate={{ x: mousePos.x * 30 - 15, y: mousePos.y * 30 - 15 }}
@@ -117,8 +112,6 @@ export default function Landing() {
             animate={{ x: mousePos.x * -30 + 15, y: mousePos.y * -30 + 15 }}
             transition={{ type: "spring", stiffness: 50 }}
           />
-          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-yellow-300/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/3 left-1/3 w-64 h-64 bg-pink-300/10 rounded-full blur-3xl" />
 
           {/* Floating Decorations */}
           {floatingDecorations.map((item, i) => (
@@ -126,46 +119,10 @@ export default function Landing() {
               key={i}
               className="absolute pointer-events-none"
               style={{ left: item.x, top: item.y }}
-              animate={{
-                y: [0, -20 - i * 3, 0],
-                rotate: [0, 10, -10, 0],
-              }}
-              transition={{
-                duration: 5 + i * 0.5,
-                repeat: Infinity,
-                delay: item.delay,
-                ease: "easeInOut",
-              }}
+              animate={{ y: [0, -20 - i * 3, 0], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 5 + i * 0.5, repeat: Infinity, delay: item.delay, ease: "easeInOut" }}
             >
-              <span className="text-xl sm:text-2xl" style={{ fontSize: item.size }}>
-                {item.emoji}
-              </span>
-            </motion.div>
-          ))}
-
-          {/* Floating Code Snippets */}
-          {floatingCode.map((item, i) => (
-            <motion.div
-              key={i}
-              className="absolute pointer-events-none font-mono"
-              style={{ left: item.x, top: item.y }}
-              animate={{
-                y: [0, -15, 0],
-                opacity: [0.15, 0.3, 0.15],
-              }}
-              transition={{
-                duration: 6 + i * 0.4,
-                repeat: Infinity,
-                delay: item.delay,
-                ease: "easeInOut",
-              }}
-            >
-              <span
-                className="text-blue-300 dark:text-blue-500/30 font-semibold"
-                style={{ fontSize: item.size }}
-              >
-                {item.text}
-              </span>
+              <span className="text-xl sm:text-2xl">{item.emoji}</span>
             </motion.div>
           ))}
 
@@ -186,24 +143,22 @@ export default function Landing() {
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-          {/* Byte Robot */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="mb-6 inline-block"
           >
-            <Byte mood={mascotMood} position="inline" />
+            <Byte mood={mascotMood} size="lg" />
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-5xl sm:text-6xl md:text-7xl font-bold leading-tight mb-4"
           >
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className={decorationData.headingClass}>
               {lang === "en" ? "Code Quest" : "Petualangan Kode"}
             </span>
             <br />
@@ -212,7 +167,6 @@ export default function Landing() {
             </span>
           </motion.h1>
 
-          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -224,7 +178,6 @@ export default function Landing() {
               : "Pelajari tentang urutan dan algoritma melalui game dan pelajaran interaktif yang menyenangkan bersama Byte si robot! Tanpa perlu pengalaman coding!"}
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -232,12 +185,12 @@ export default function Landing() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button
-              onClick={handleStartLearning}
+              onClick={() => { playClick(); navigate("/auth"); }}
               size="lg"
-              className="h-14 px-8 text-base rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300"
+              className={`h-14 px-8 text-base rounded-full ${decorationData.buttonStyle} text-white shadow-lg shadow-purple-500/25 hover:shadow-xl transition-all duration-300`}
             >
               <Rocket className="w-5 h-5 mr-2" />
-              {isAuthenticated ? (lang === "en" ? "Continue Learning" : "Lanjut Belajar") : (lang === "en" ? "Get Started Free" : "Mulai Gratis")}
+              {lang === "en" ? "Get Started Free" : "Mulai Gratis"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Link to="/quiz">
@@ -263,15 +216,14 @@ export default function Landing() {
               <motion.div
                 key={i}
                 whileHover={{ scale: 1.05, y: -3 }}
-                className="bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 dark:border-gray-700/30 hover:shadow-lg transition-all"
+                className={`${decorationData.cardStyle} rounded-2xl p-4 border hover:shadow-lg transition-all`}
               >
-                <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">{stat.number}</div>
+                <div className={`text-2xl font-bold ${decorationData.headingClass}`}>{stat.number}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.label[lang as keyof typeof stat.label]}</div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -296,7 +248,7 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className={decorationData.headingClass}>
                 {lang === "en" ? "What You'll Learn" : "Apa yang Akan Kamu Pelajari"}
               </span>
             </h2>
@@ -316,7 +268,7 @@ export default function Landing() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15 }}
                   whileHover={{ y: -5, scale: 1.02 }}
-                  className="group relative bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/30 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 cursor-default"
+                  className={`group ${decorationData.cardStyle} rounded-2xl p-6 border hover:shadow-xl transition-all duration-300 cursor-default`}
                 >
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className="w-7 h-7 text-white" />
@@ -330,6 +282,38 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className={`text-3xl font-bold text-center mb-12 ${decorationData.headingClass}`}
+          >
+            {lang === "en" ? "What Kids Say" : "Kata Anak-Anak"}
+          </motion.h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {guests.map((guest, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-6 border text-center`}
+              >
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xl font-bold mx-auto mb-3">
+                  {guest.name[0]}
+                </div>
+                <p className="text-xs text-gray-400 mb-2">{lang === "en" ? `Age ${guest.age}` : `Usia ${guest.age}`}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 italic">"{guest.text[lang as keyof typeof guest.text]}"</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5" />
@@ -338,7 +322,7 @@ export default function Landing() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl rounded-3xl p-12 border border-gray-200/50 dark:border-gray-700/30 shadow-2xl"
+            className={`${decorationData.cardStyle} rounded-3xl p-12 border shadow-2xl`}
           >
             <motion.div
               animate={{ rotate: [0, 10, -10, 10, 0] }}
@@ -348,7 +332,7 @@ export default function Landing() {
               🚀
             </motion.div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className={decorationData.headingClass}>
                 {lang === "en" ? "Ready to Start Your Adventure?" : "Siap Memulai Petualanganmu?"}
               </span>
             </h2>
@@ -357,25 +341,481 @@ export default function Landing() {
                 ? "Join thousands of young learners discovering the magic of coding with Byte the robot!"
                 : "Bergabunglah dengan ribuan pelajar muda yang menemukan keajaiban coding bersama Byte si robot!"}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                onClick={handleStartLearning}
-                size="lg"
-                className="h-14 px-10 text-base rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                {isAuthenticated ? (lang === "en" ? "Continue Learning" : "Lanjut Belajar") : (lang === "en" ? "Start Free" : "Mulai Gratis")}
-              </Button>
-              <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="h-14 px-10 text-base rounded-full border-2">
-                  <Trophy className="w-5 h-5 mr-2" />
-                  {t("student.dashboard")}
-                </Button>
-              </Link>
-            </div>
+            <Button
+              onClick={() => { playClick(); navigate("/auth"); }}
+              size="lg"
+              className={`h-14 px-10 text-base rounded-full ${decorationData.buttonStyle} text-white shadow-lg shadow-purple-500/25`}
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              {lang === "en" ? "Start Free" : "Mulai Gratis"}
+            </Button>
           </motion.div>
         </div>
       </section>
     </div>
   );
+}
+
+// ============================================================
+// STUDENT HOME — Personalized Dashboard (after login)
+// ============================================================
+
+function StudentHome() {
+  const { lang } = useLanguage();
+  const { isAuthenticated, currentUserProfile } = useAuth();
+  const { state, achievements, getDailyMission, getWeeklyChallenge, completeDailyMission, completeWeeklyChallenge, resetGame } = useGame();
+  const { decorationData } = useTheme();
+  const { playClick, playAchievement } = useSound();
+  const navigate = useNavigate();
+
+  const [dailyMission, setDailyMission] = useState<{ mission: { id: string; title: { en: string; id: string }; description: { en: string; id: string }; xp: number; coins: number; icon: string }; isDone: boolean } | null>(null);
+  const [weeklyChallenge, setWeeklyChallenge] = useState<{ challenge: { id: string; title: { en: string; id: string }; description: { en: string; id: string }; xp: number; coins: number; icon: string }; isDone: boolean } | null>(null);
+  const [showMissionComplete, setShowMissionComplete] = useState(false);
+
+  useEffect(() => {
+    const mission = getDailyMission();
+    if (mission) setDailyMission(mission);
+    const challenge = getWeeklyChallenge();
+    if (challenge) setWeeklyChallenge(challenge);
+  }, [getDailyMission, getWeeklyChallenge]);
+
+  // Get time-based greeting
+  const getGreeting = useCallback(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { en: "Good Morning", id: "Selamat Pagi" };
+    if (hour < 17) return { en: "Good Afternoon", id: "Selamat Siang" };
+    return { en: "Good Evening", id: "Selamat Sore" };
+  }, []);
+
+  const greeting = getGreeting();
+  const studentName = currentUserProfile?.nickname || currentUserProfile?.fullName || "Student";
+  const xpProgress = state.xp % 100;
+  const xpToNextLevel = 100;
+
+  // Find current lesson for "Continue Learning"
+  const currentLessonData = state.currentLesson
+    ? lessons.find((l) => l.id === state.currentLesson)
+    : null;
+
+  const unlockedAchievements = achievements.filter((a) => state.achievements.includes(a.id));
+
+  const handleCompleteMission = () => {
+    completeDailyMission();
+    setDailyMission((prev) => prev ? { ...prev, isDone: true } : null);
+    setShowMissionComplete(true);
+    playAchievement();
+    fireConfetti(20);
+    setTimeout(() => setShowMissionComplete(false), 3000);
+  };
+
+  const handleCompleteChallenge = () => {
+    completeWeeklyChallenge();
+    setWeeklyChallenge((prev) => prev ? { ...prev, isDone: true } : null);
+    setShowMissionComplete(true);
+    playAchievement();
+    fireConfetti(30);
+    setTimeout(() => setShowMissionComplete(false), 3000);
+  };
+
+  if (!isAuthenticated) return null;
+
+  const timeIcon = new Date().getHours() < 12 ? "☀️" : new Date().getHours() < 17 ? "🌤️" : "🌙";
+
+  return (
+    <div className={`min-h-screen ${decorationData.bgClass} transition-all duration-700`}>
+      <div className="pt-24 pb-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          {/* Byte Greeting + Personalized Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+              <Byte
+                mood="wave"
+                message={
+                  lang === "en"
+                    ? `Hi ${studentName}! ${greeting.en}! Ready for today's adventure? 🚀`
+                    : `Hai ${studentName}! ${greeting.id}! Siap untuk petualangan hari ini? 🚀`
+                }
+                autoSpeak
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{timeIcon}</span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold">
+                  <span className={decorationData.headingClass}>
+                    {greeting[lang]}, {studentName}! 👋
+                  </span>
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {state.currentLesson
+                    ? lang === "en"
+                      ? `Continue where you left off in ${currentLessonData?.title[lang] || "your lesson"}`
+                      : `Lanjutkan dari ${currentLessonData?.title[lang] || "pelajaranmu"}`
+                    : lang === "en"
+                      ? "Ready to start learning? Pick a lesson below!"
+                      : "Siap belajar? Pilih pelajaran di bawah!"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Mission Complete Toast */}
+          {showMissionComplete && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="mb-6 p-4 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-700/30 text-center"
+            >
+              <p className="text-green-700 dark:text-green-300 font-bold text-lg">
+                🎉 {lang === "en" ? "Mission Complete! Rewards earned! 🎉" : "Misi Selesai! Hadiah didapatkan! 🎉"}
+              </p>
+            </motion.div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Continue Learning Card */}
+              {state.currentLesson ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`${decorationData.cardStyle} rounded-2xl p-6 border overflow-hidden relative`}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-2xl" />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen className="w-5 h-5 text-blue-500" />
+                      <h3 className="font-bold text-gray-800 dark:text-gray-100">
+                        {lang === "en" ? "Continue Learning" : "Lanjutkan Belajar"}
+                      </h3>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-2xl flex-shrink-0">
+                        {currentLessonData?.icon || "📚"}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-800 dark:text-gray-100">
+                          {currentLessonData?.title[lang] || state.currentLesson}
+                        </h4>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {currentLessonData?.time || 10} min</span>
+                          <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> +{currentLessonData?.xp || 20} XP</span>
+                        </div>
+                        <div className="mt-3 flex items-center gap-3">
+                          <Button
+                            onClick={() => navigate(`/${state.currentLesson.replace("_", "-")}`)}
+                            className={`rounded-full h-9 text-sm ${decorationData.buttonStyle} text-white`}
+                          >
+                            <Rocket className="w-4 h-4 mr-1" />
+                            {lang === "en" ? "Resume" : "Lanjutkan"}
+                          </Button>
+                          <Byte mood="happy" message="" size="sm" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`${decorationData.cardStyle} rounded-2xl p-6 border`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-2xl">
+                      🚀
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 dark:text-gray-100">
+                        {lang === "en" ? "Start Your First Lesson!" : "Mulai Pelajaran Pertamamu!"}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {lang === "en" ? "Begin your learning adventure today!" : "Mulai petualangan belajarmu hari ini!"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Quick Stats Row */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+              >
+                {[
+                  { icon: Sparkles, value: state.xp, label: { en: "XP", id: "XP" }, color: "from-yellow-400 to-amber-500", bg: "bg-yellow-50 dark:bg-yellow-900/20" },
+                  { icon: Trophy, value: `${state.level}`, label: { en: "Level", id: "Level" }, color: "from-blue-400 to-purple-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+                  { icon: Flame, value: `${state.streak}`, label: { en: "Streak", id: "Rantai" }, color: "from-orange-400 to-red-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
+                  { icon: Heart, value: `${state.hearts}/5`, label: { en: "Hearts", id: "Hati" }, color: "from-red-400 to-pink-500", bg: "bg-red-50 dark:bg-red-900/20" },
+                ].map((stat, i) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={i} className={`${stat.bg} rounded-2xl p-3 border border-gray-200/50 dark:border-gray-700/30`}>
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2 shadow-sm`}>
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{stat.value}</div>
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400">{stat.label[lang]}</div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Level Progress */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    {lang === "en" ? "Level Progress" : "Kemajuan Level"}
+                  </span>
+                  <span className="text-sm text-purple-600 font-medium">{xpProgress}/{xpToNextLevel} XP</span>
+                </div>
+                <Progress value={(xpProgress / xpToNextLevel) * 100} className="h-2.5 rounded-full" />
+              </motion.div>
+
+              {/* Lesson Progress */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100">
+                    {lang === "en" ? "Lesson Progress" : "Kemajuan Pelajaran"}
+                  </h3>
+                  <span className="text-sm text-blue-600 font-medium">{state.completedLessons.length}/{lessons.length}</span>
+                </div>
+                <Progress value={(state.completedLessons.length / lessons.length) * 100} className="h-2 mb-4 rounded-full" />
+                <div className="grid grid-cols-2 gap-2">
+                  {lessons.slice(0, 4).map((lesson) => {
+                    const completed = state.completedLessons.includes(lesson.id);
+                    return (
+                      <div
+                        key={lesson.id}
+                        className={`flex items-center gap-2 p-2 rounded-xl ${
+                          completed ? "bg-green-50 dark:bg-green-900/20" : "bg-gray-50 dark:bg-gray-800/30"
+                        }`}
+                      >
+                        <span className="text-lg">{lesson.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-medium truncate ${completed ? "text-gray-800 dark:text-gray-100" : "text-gray-400"}`}>
+                            {lesson.title[lang]}
+                          </p>
+                        </div>
+                        {completed ? (
+                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <Link to={`/${lesson.id.replace("_", "-")}`}>
+                            <Button size="sm" variant="ghost" className="rounded-full text-[10px] h-6 px-2 text-purple-500">
+                              +{lesson.xp}
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {lessons.length > 4 && (
+                  <Link to="/dashboard" className="text-xs text-purple-500 hover:text-purple-600 mt-2 inline-block">
+                    {lang === "en" ? "View all lessons →" : "Lihat semua pelajaran →"}
+                  </Link>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-5">
+              {/* Daily Mission */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-orange-500" />
+                  <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">
+                    {lang === "en" ? "Daily Mission" : "Misi Harian"}
+                  </h3>
+                </div>
+                {dailyMission ? (
+                  <div className={`p-3 rounded-xl ${dailyMission.isDone ? "bg-green-50 dark:bg-green-900/20" : "bg-orange-50 dark:bg-orange-900/20"}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{dailyMission.mission.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-100">{dailyMission.mission.title[lang]}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{dailyMission.mission.description[lang]}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-orange-200/50 dark:border-orange-700/30">
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                        <span className="text-yellow-600">+{dailyMission.mission.xp} XP</span>
+                        <span className="text-blue-600">+{dailyMission.mission.coins} 🪙</span>
+                      </div>
+                      {dailyMission.isDone ? (
+                        <Badge className="bg-green-500 text-white text-[10px] h-5">
+                          {lang === "en" ? "Done! 🎉" : "Selesai! 🎉"}
+                        </Badge>
+                      ) : (
+                        <Button
+                          onClick={handleCompleteMission}
+                          size="sm"
+                          className="rounded-full bg-gradient-to-r from-orange-400 to-red-500 text-white text-[10px] h-7 px-3"
+                        >
+                          {lang === "en" ? "Claim" : "Klaim"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 text-center py-3">
+                    {lang === "en" ? "Loading mission..." : "Memuat misi..."}
+                  </p>
+                )}
+              </motion.div>
+
+              {/* Weekly Challenge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">
+                    {lang === "en" ? "Weekly Challenge" : "Tantangan Mingguan"}
+                  </h3>
+                </div>
+                {weeklyChallenge ? (
+                  <div className={`p-3 rounded-xl ${weeklyChallenge.isDone ? "bg-green-50 dark:bg-green-900/20" : "bg-yellow-50 dark:bg-yellow-900/20"}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{weeklyChallenge.challenge.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-100">{weeklyChallenge.challenge.title[lang]}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{weeklyChallenge.challenge.description[lang]}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-yellow-200/50 dark:border-yellow-700/30">
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                        <span className="text-yellow-600">+{weeklyChallenge.challenge.xp} XP</span>
+                        <span className="text-blue-600">+{weeklyChallenge.challenge.coins} 🪙</span>
+                      </div>
+                      {weeklyChallenge.isDone ? (
+                        <Badge className="bg-green-500 text-white text-[10px] h-5">
+                          {lang === "en" ? "Complete! 🏆" : "Selesai! 🏆"}
+                        </Badge>
+                      ) : (
+                        <Button
+                          onClick={handleCompleteChallenge}
+                          size="sm"
+                          className="rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] h-7 px-3"
+                        >
+                          {lang === "en" ? "Claim" : "Klaim"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 text-center py-3">
+                    {lang === "en" ? "Loading challenge..." : "Memuat tantangan..."}
+                  </p>
+                )}
+              </motion.div>
+
+              {/* Achievements Preview */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="w-4 h-4 text-yellow-500" />
+                  <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">
+                    {lang === "en" ? "Achievements" : "Pencapaian"}
+                  </h3>
+                </div>
+                <div className="space-y-1.5">
+                  {unlockedAchievements.slice(0, 3).map((a) => (
+                    <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                      <span className="text-base">{a.icon}</span>
+                      <p className="text-[11px] font-medium text-yellow-800 dark:text-yellow-200">{a.title}</p>
+                    </div>
+                  ))}
+                  {unlockedAchievements.length === 0 && (
+                    <p className="text-[11px] text-gray-400 text-center py-2">
+                      {lang === "en" ? "Complete lessons to unlock!" : "Selesaikan pelajaran untuk membuka!"}
+                    </p>
+                  )}
+                </div>
+                <Link to="/dashboard" className="text-[11px] text-purple-500 hover:text-purple-600 mt-2 inline-block">
+                  {lang === "en" ? "View all →" : "Lihat semua →"}
+                </Link>
+              </motion.div>
+
+              {/* Quick Links */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className={`${decorationData.cardStyle} rounded-2xl p-5 border`}
+              >
+                <h3 className="font-bold text-sm mb-3 text-gray-800 dark:text-gray-100">
+                  {lang === "en" ? "Quick Access" : "Akses Cepat"}
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { to: "/sequence", icon: "📋", label: { en: "Sequence", id: "Urutan" } },
+                    { to: "/algorithm", icon: "💡", label: { en: "Algorithm", id: "Algoritma" } },
+                    { to: "/quiz", icon: "🧠", label: { en: "Quiz", id: "Kuis" } },
+                    { to: "/dashboard", icon: "📊", label: { en: "Dashboard", id: "Dasbor" } },
+                  ].map((link, i) => (
+                    <Link key={i} to={link.to} onClick={playClick}>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start rounded-xl h-10 text-xs hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <span className="mr-1.5">{link.icon}</span>
+                        {link.label[lang]}
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// LANDING — Smart Router
+// ============================================================
+
+export default function Landing() {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <StudentHome />;
+  }
+
+  return <PublicLanding />;
 }

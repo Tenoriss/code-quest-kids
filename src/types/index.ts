@@ -28,6 +28,12 @@ export interface GameState {
   currentLesson: string;
   coins: number;
   dailyRewardClaimed: string | null;
+  dailyMissionDate: string | null;
+  dailyMissionId: string | null;
+  dailyMissionDone: boolean;
+  weeklyChallengeWeek: number | null;
+  weeklyChallengeId: string | null;
+  weeklyChallengeDone: boolean;
 }
 
 export interface Achievement {
@@ -101,4 +107,49 @@ export interface DragItem {
   id: string;
   text: string;
   emoji: string;
+}
+
+export interface DailyMission {
+  id: string;
+  title: { en: string; id: string };
+  description: { en: string; id: string };
+  xp: number;
+  coins: number;
+  icon: string;
+}
+
+export interface WeeklyChallenge {
+  id: string;
+  title: { en: string; id: string };
+  description: { en: string; id: string };
+  xp: number;
+  coins: number;
+  icon: string;
+}
+
+export interface ThemeRobotData {
+  bodyGradient: string;
+  eyeColor: string;
+  antennaColor: string;
+  glowColor: string;
+  shadowColor: string;
+  mouthColor: string;
+  accentColor: string;
+  earColor: string;
+  bgColor: string;
+  bubbleBg: string;
+  bubbleText: string;
+  bubbleBorder: string;
+  emoji: string;
+  decoration: string;
+}
+
+export interface ThemeDecorationData {
+  bgClass: string;
+  floatingEmojis: string[];
+  particles: string;
+  cardStyle: string;
+  buttonStyle: string;
+  headingClass: string;
+  badgeClass: string;
 }

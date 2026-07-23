@@ -168,7 +168,6 @@ export default function AuthPage() {
               <Byte
                 mood={byteMood}
                 autoSpeak
-                position="inline"
               />
               <motion.div
                 animate={{ y: [0, -5, 0] }}
@@ -238,7 +237,7 @@ export default function AuthPage() {
 
                 {/* Byte greeting for mobile */}
                 <div className="lg:hidden mb-4">
-                  <Byte mood={byteMood} position="inline" />
+                  <Byte mood={byteMood} />
                 </div>
 
                 <AnimatePresence mode="wait">

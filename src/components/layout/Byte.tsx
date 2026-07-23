@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX, RotateCcw, Sparkles } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ByteProps {
   mood?: "idle" | "wave" | "happy" | "celebrate" | "think" | "sad" | "excited";
@@ -8,7 +10,7 @@ interface ByteProps {
   autoSpeak?: boolean;
   hint?: string;
   className?: string;
-  position?: "top-right" | "bottom-right" | "bottom-left" | "top-left" | "inline";
+  size?: "sm" | "md" | "lg";
 }
 
 const MOOD_ANIMATIONS = {
@@ -29,6 +31,12 @@ const MOOD_EYES = {
   think: "thinking",
   sad: "sad",
   excited: "star",
+};
+
+const SIZE_MAP = {
+  sm: { container: "w-12 h-12 sm:w-14 sm:h-14", eye: "w-2 h-2 sm:w-3 sm:h-3", pupil: "text-[5px] sm:text-[7px]", mouth: "w-3 h-1", antenna: "w-1.5 h-1.5 -top-1.5", ear: "w-1.5 h-1.5" },
+  md: { container: "w-16 h-16 sm:w-20 sm:h-20", eye: "w-3 h-3 sm:w-4 sm:h-4", pupil: "text-[6px] sm:text-[8px]", mouth: "w-4 h-1.5", antenna: "w-2 h-2 -top-2", ear: "w-2 h-2" },
+  lg: { container: "w-20 h-20 sm:w-24 sm:h-24", eye: "w-4 h-4 sm:w-5 sm:h-5", pupil: "text-[7px] sm:text-[9px]", mouth: "w-5 h-2", antenna: "w-2.5 h-2.5 -top-2.5", ear: "w-2.5 h-2.5" },
 };
 
 const BYTE_MESSAGES = {
@@ -70,9 +78,12 @@ export function Byte({
   autoSpeak = false,
   hint,
   className = "",
+  size = "md",
 }: ByteProps) {
-  const moodType = mood;
-  const [currentMood, setCurrentMood] = useState<"idle" | "wave" | "happy" | "celebrate" | "think" | "sad" | "excited">(moodType);
+  const themeCtx = useTheme();
+  const { lang } = useLanguage();
+  const robotData = themeCtx.robotData;
+  const [currentMood, setCurrentMood] = useState<typeof mood>(mood);
   const [currentMessage, setCurrentMessage] = useState(message || "");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -82,19 +93,18 @@ export function Byte({
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const moodIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Pick a random message from a category
+  const sz = SIZE_MAP[size];
+
   const getRandomMessage = useCallback((category: keyof typeof BYTE_MESSAGES) => {
     const msgs = BYTE_MESSAGES[category];
     return msgs[Math.floor(Math.random() * msgs.length)];
   }, []);
 
-  // Set message when mood/props change
   useEffect(() => {
     if (mood !== undefined) setCurrentMood(mood);
     if (message) {
       setCurrentMessage(message);
-    } else    if (mood !== "idle") {
-      // Map mood to message category
+    } else if (mood !== "idle") {
       const moodMap: Record<string, keyof typeof BYTE_MESSAGES> = {
         happy: "correct",
         celebrate: "complete",
@@ -108,7 +118,6 @@ export function Byte({
     }
   }, [mood, message, getRandomMessage]);
 
-  // Auto mood cycling when idle
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (mood === "idle") {
@@ -125,7 +134,6 @@ export function Byte({
     };
   }, [mood]);
 
-  // Speech synthesis with male child voice
   const speak = useCallback(
     (text: string) => {
       if (!window.speechSynthesis || isMuted) return;
@@ -133,11 +141,9 @@ export function Byte({
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.85 * speed;
       utterance.volume = volume;
-      utterance.pitch = 1.6; // High pitch for child-like voice
+      utterance.pitch = 1.6;
 
-      // Try to find a male child voice
       const voices = window.speechSynthesis.getVoices();
-      // Prefer these voice names for child/male sound
       const preferredVoices = voices.filter(
         (v) =>
           v.name.toLowerCase().includes("child") ||
@@ -148,7 +154,6 @@ export function Byte({
       if (preferredVoices.length > 0) {
         utterance.voice = preferredVoices[0];
       } else {
-        // Fallback: use a high-pitched male voice
         const maleVoices = voices.filter((v) => v.name.toLowerCase().includes("male"));
         if (maleVoices.length > 0) utterance.voice = maleVoices[0];
       }
@@ -162,7 +167,6 @@ export function Byte({
     [isMuted, speed, volume]
   );
 
-  // Auto speak (speak is defined above, so it's available here)
   useEffect(() => {
     if (autoSpeak && currentMessage && !isMuted) {
       const timer = setTimeout(() => speak(currentMessage), 500);
@@ -198,48 +202,57 @@ export function Byte({
   const eyes = eyeEmoji[eyeType as keyof typeof eyeEmoji] || eyeEmoji.normal;
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className} transition-all duration-500`}>
       <div className="flex items-start gap-3">
         {/* Robot Avatar */}
         <div className="relative flex-shrink-0">
           <motion.div
             animate={MOOD_ANIMATIONS[currentMood] || MOOD_ANIMATIONS.idle}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            className="relative w-16 h-16 sm:w-20 sm:h-20"
+            className={`relative ${sz.container}`}
           >
-            {/* Robot Body */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 rounded-2xl shadow-lg shadow-purple-300/40 overflow-hidden">
+            {/* Robot Body with theme gradient */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${robotData.bodyGradient} rounded-2xl ${robotData.shadowColor} overflow-hidden transition-all duration-500`}
+            >
               {/* Robot Face */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 {/* Eyes */}
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-                    <span className="text-[6px] sm:text-[8px] text-purple-600 font-bold">{eyes}</span>
+                  <div className={`${sz.eye} bg-white rounded-full flex items-center justify-center shadow-sm`}>
+                    <span className={`${sz.pupil} font-bold ${robotData.eyeColor} transition-colors duration-500`}>{eyes}</span>
                   </div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-                    <span className="text-[6px] sm:text-[8px] text-purple-600 font-bold">{eyes}</span>
+                  <div className={`${sz.eye} bg-white rounded-full flex items-center justify-center shadow-sm`}>
+                    <span className={`${sz.pupil} font-bold ${robotData.eyeColor} transition-colors duration-500`}>{eyes}</span>
                   </div>
                 </div>
                 {/* Mouth */}
                 <motion.div
                   animate={currentMood === "happy" || currentMood === "celebrate" || currentMood === "excited" ? { scaleX: 1.3 } : { scaleX: 1 }}
-                  className="w-4 h-1.5 bg-white/80 rounded-full mt-0.5"
+                  className={`${sz.mouth} ${robotData.mouthColor} rounded-full mt-0.5 transition-colors duration-500`}
                 />
               </div>
               {/* Antenna */}
               <motion.div
                 animate={{ rotate: [-5, 5, -5] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-yellow-300 rounded-full shadow-lg shadow-yellow-300/50"
+                className={`absolute ${sz.antenna} left-1/2 -translate-x-1/2 rounded-full ${robotData.antennaColor} shadow-lg transition-colors duration-500`}
               />
+              {/* Theme decoration on robot body */}
+              <div className="absolute bottom-1 right-1 text-[7px] sm:text-[9px] opacity-70 select-none">
+                {robotData.emoji}
+              </div>
             </div>
+
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-300/20 to-purple-300/20 blur-sm" />
+            <div
+              className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${robotData.glowColor} blur-sm transition-all duration-500`}
+            />
           </motion.div>
 
           {/* Ear/side decorations */}
-          <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-blue-300 rounded-full" />
-          <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-pink-300 rounded-full" />
+          <div className={`absolute -left-1 top-1/2 -translate-y-1/2 rounded-full ${robotData.earColor} transition-colors duration-500 ${sz.ear}`} />
+          <div className={`absolute -right-1 top-1/2 -translate-y-1/2 rounded-full ${robotData.earColor} transition-colors duration-500 ${sz.ear}`} />
         </div>
 
         {/* Speech Bubble */}
@@ -249,8 +262,10 @@ export function Byte({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="relative flex-1"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 font-medium leading-relaxed">
+            <div
+              className={`${robotData.bubbleBg} ${robotData.bubbleBorder} rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-lg border transition-all duration-500`}
+            >
+              <p className={`text-xs sm:text-sm ${robotData.bubbleText} font-medium leading-relaxed transition-colors duration-500`}>
                 {currentMessage}
               </p>
 
@@ -260,7 +275,7 @@ export function Byte({
                   onClick={() => setShowHint(true)}
                   className="mt-2 text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1 transition-colors"
                 >
-                  <Sparkles className="w-3 h-3" /> Need a hint?
+                  <Sparkles className="w-3 h-3" />{lang === "en" ? " Need a hint?" : " Butuh petunjuk?"}
                 </button>
               )}
               {showHint && hint && (
@@ -275,32 +290,25 @@ export function Byte({
 
               {/* Voice Controls */}
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                {/* Mute */}
                 <button
                   onClick={toggleMute}
                   className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  title={isMuted ? "Unmute" : "Mute"}
+                  title={isMuted ? (lang === "en" ? "Unmute" : "Aktifkan suara") : (lang === "en" ? "Mute" : "Matikan suara")}
                 >
-                  {isMuted ? (
-                    <VolumeX className="w-3 h-3 text-gray-400" />
-                  ) : (
-                    <Volume2 className="w-3 h-3 text-gray-400" />
-                  )}
+                  {isMuted ? <VolumeX className="w-3 h-3 text-gray-400" /> : <Volume2 className="w-3 h-3 text-gray-400" />}
                 </button>
 
-                {/* Replay */}
                 <button
                   onClick={replay}
                   disabled={!currentMessage || isMuted}
                   className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30"
-                  title="Replay"
+                  title={lang === "en" ? "Replay" : "Ulangi"}
                 >
                   <RotateCcw className={`w-3 h-3 ${isSpeaking ? "text-purple-500" : "text-gray-400"}`} />
                 </button>
 
-                {/* Speed */}
                 <div className="flex items-center gap-1 ml-auto">
-                  <span className="text-[10px] text-gray-400">Speed:</span>
+                  <span className="text-[10px] text-gray-400">{lang === "en" ? "Speed:" : "Kecepatan:"}</span>
                   <button
                     onClick={() => setSpeed((s) => Math.max(0.5, s - 0.25))}
                     className="px-1.5 py-0.5 text-[10px] rounded bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200"
@@ -316,9 +324,8 @@ export function Byte({
                   </button>
                 </div>
 
-                {/* Volume */}
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-gray-400">Vol:</span>
+                  <span className="text-[10px] text-gray-400">{lang === "en" ? "Vol:" : "Vol:"}</span>
                   <input
                     type="range"
                     min="0"
@@ -332,7 +339,7 @@ export function Byte({
               </div>
             </div>
             {/* Speech bubble arrow */}
-            <div className="absolute -left-1 bottom-3 w-2 h-2 bg-white dark:bg-gray-800 border-l border-b border-gray-200 dark:border-gray-700 -rotate-45" />
+            <div className={`absolute -left-1 bottom-3 w-2 h-2 ${robotData.bubbleBg} border-l border-b ${robotData.bubbleBorder} -rotate-45 transition-all duration-500`} />
           </motion.div>
         )}
       </div>
