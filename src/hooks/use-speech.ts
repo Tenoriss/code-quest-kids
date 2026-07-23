@@ -55,9 +55,9 @@ export function useSpeech() {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang === "id" ? "id-ID" : "en-US";
 
-    // Natural-sounding speech settings
-    utterance.rate = 1.05;       // Natural pace — not too slow (robotic) nor too fast
-    utterance.pitch = 1.0;       // Natural pitch — neutral, human-like
+    // Fun, kid-friendly speech settings — bouncy pace, bright pitch
+    utterance.rate = 1.25;       // Energetic pace — bouncy and engaging for kids
+    utterance.pitch = 1.3;       // Bright, cheerful pitch — sounds like a friendly cartoon character
     utterance.volume = 1.0;      // Full volume
 
     // Try to select a natural-sounding voice
