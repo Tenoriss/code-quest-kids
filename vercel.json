@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "bun run build",
+  "buildCommand": "npx convex dev --once && bun run build",
   "outputDirectory": "dist",
   "installCommand": "bun install --no-cache",
   "devCommand": "bun run dev",
