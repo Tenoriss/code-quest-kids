@@ -1,0 +1,13 @@
+{
+  "framework": "vite",
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "installCommand": "bun install --no-cache",
+  "devCommand": "bun run dev",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "github": {
+    "silent": true
+  }
+}
