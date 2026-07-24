@@ -1,0 +1,17 @@
+{
+  "name": "CodeQuest - Learn Sequences & Algorithms",
+  "short_name": "CodeQuest",
+  "description": "Learn about sequences and algorithms through fun, interactive games and lessons with Byte the robot!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#6366f1",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
